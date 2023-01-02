@@ -11,7 +11,8 @@
 
 class RenderPass {
 public:
-    RenderPass(char* name, unsigned int index, GraphicsWindow* win, NodePath cam);
+    RenderPass(char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
+               bool has_srgb=false, bool has_alpha=false);
     GraphicsOutput* get_fbo();
     NodePath get_camera();
     Texture* get_texture(unsigned int i);
@@ -24,7 +25,7 @@ private:
     std::vector<Texture*> _tex;
     NodePath _cam;
 
-    GraphicsOutput* _make_fbo(GraphicsWindow* win);
+    GraphicsOutput* _make_fbo(GraphicsWindow* win, bool has_srgb=false, bool has_alpha=false);
     void _make_textures();
     NodePath _make_camera(GraphicsOutput* fbo, char* name, NodePath camera);
     NodePath _make_camera2d(GraphicsOutput* fbo, char* name, NodePath camera);

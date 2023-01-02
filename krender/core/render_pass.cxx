@@ -14,11 +14,12 @@
 #include "krender/core/render_pass.h"
 
 
-RenderPass::RenderPass(char* name, unsigned int index, GraphicsWindow* win, NodePath cam) {
+RenderPass::RenderPass(char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
+                       bool has_srgb, bool has_alpha) {
     _name = name;
     _index = index;
 
-    _fbo = _make_fbo(win);
+    _fbo = _make_fbo(win, has_srgb, has_alpha);
     _make_textures();
 
     char* cam_name = (char*) malloc((strlen(name) + strlen("_camera")) * sizeof(char));
@@ -47,7 +48,7 @@ unsigned int RenderPass::get_num_textures() {
     return _tex.size();
 }
 
-GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win) {
+GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool has_alpha) {
     WindowProperties props = win->get_properties();
     int w = props.get_x_size();
     int h = props.get_y_size();
@@ -57,6 +58,8 @@ GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win) {
     if (_index == 0) {  // initial render pass
         fbp->set_depth_bits(1);
         fbp->set_aux_rgba(1);
+        if (has_srgb)
+            fbp->set_srgb_color(true);
     }
 
     char* tex_name = (char*) malloc((strlen(_name) + strlen("_color")) * sizeof(char));
@@ -65,7 +68,10 @@ GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win) {
 
     GraphicsOutput* fbo = win->make_texture_buffer(_name, w, h, t, false, fbp);
     fbo->set_sort(_index - 10);
-    fbo->set_clear_color(LVecBase4(0, 0, 0, 1));
+    if (has_alpha)
+        fbo->set_clear_color(LVecBase4(0, 0, 0, 0));
+    else
+        fbo->set_clear_color(LVecBase4(0, 0, 0, 1));
     // fbo->clear_render_textures();
     _tex.push_back(t);
 

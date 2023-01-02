@@ -14,7 +14,8 @@
 class EXPORT_CLASS RenderPipeline: public TypedWritableReferenceCount {
 PUBLISHED:
     RenderPipeline(
-        GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d);
+        GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
+        bool has_srgb=false, bool has_alpha=false);
 
     void add_render_pass(char* name, Shader* shader=NULL);
 
@@ -23,6 +24,8 @@ private:
     NodePath _camera;
     NodePath _camera2d;
     NodePath _render2d;
+    bool _has_srgb;
+    bool _has_alpha;
 
     int _index;
     NodePath _scene;

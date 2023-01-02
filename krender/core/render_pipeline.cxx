@@ -10,11 +10,14 @@
 TypeHandle RenderPipeline::_type_handle;
 
 RenderPipeline::RenderPipeline(
-        GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d) {
+        GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
+        bool has_srgb, bool has_alpha) {
     _win = window;
     _camera = camera;
     _camera2d = camera2d;
     _render2d = render2d;
+    _has_srgb = has_srgb;
+    _has_alpha = has_alpha;
 
     _scene = NodePath(new PandaNode("Scene"));
     _scene.set_shader_input(ShaderInput("render_mode", 1));
@@ -25,7 +28,7 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
 
     if (_passes.size() == 0) {  // initial render pass
         pass = new RenderPass(
-            name, (unsigned int) _passes.size(), _win, _camera);
+            name, (unsigned int) _passes.size(), _win, _camera, _has_srgb, _has_alpha);
 
         // setup camera which which captures scene
         // and renders into FBO using default camera lens
@@ -35,7 +38,7 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
 
     } else {  // other render passes
         pass = new RenderPass(
-            name, (unsigned int) _passes.size(), _win, _camera2d);
+            name, (unsigned int) _passes.size(), _win, _camera2d, _has_srgb, _has_alpha);
 
         // setup plane from previous render pass
         NodePath prev_plane = _passes.back()->get_fbo()->get_texture_card();
@@ -55,12 +58,8 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
     }
 
     // show current plane on screen
-    printf("get fbo\n");
     NodePath plane = pass->get_fbo()->get_texture_card();
-    printf("reparetn\n");
     plane.reparent_to(_render2d);
 
-    printf("add pass\n");
     _passes.push_back(pass);
-    printf("done\n");
 }
