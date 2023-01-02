@@ -14,9 +14,6 @@ find_package(PythonInterp 3.2 REQUIRED)
 find_package(PythonLibs 3.2 REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIR})
 
-find_package(Bullet REQUIRED)
-include_directories(${BULLET_INCLUDE_DIR})
-
 find_path(PANDA_INCLUDE_DIR NAMES panda3d/pandaSystem.h)
 include_directories(${PANDA_INCLUDE_DIR}/panda3d)
 find_library(PANDAFRAMEWORK_LIBRARY_PATH NAMES libp3framework.so libp3framework.lib p3framework.lib)
