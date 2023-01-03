@@ -38,9 +38,11 @@ PUBLISHED:
     LightingPipeline(GraphicsWindow* window, NodePath scene, NodePath camera);
     void add_light(PT(RPLight) light);
     void remove_light(PT(RPLight) light);
+    void prepare_scene();
 
 private:
     GraphicsWindow* _win;
+    NodePath _scene;
     GraphicsOutput* _shadowmap_fbo;
     Texture* _shadowmap_tex;
 

@@ -2,16 +2,28 @@
 #include "displayRegion.h"
 #include "frameBufferProperties.h"
 #include "geomEnums.h"
+#include "pointLight.h"
 #include "renderState.h"
+#include "spotlight.h"
 #include "texture.h"
 
 #include "krender/core/lighting_pipeline.h"
+
+#ifdef CPPPARSER  // interrogate
+class RPPointLight;
+class RPSpotLight;
+
+#else  // normal compiler
+#include "rpPointLight.h"
+#include "rpSpotLight.h"
+#endif
 
 
 TypeHandle LightingPipeline::_type_handle;
 
 LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath scene, NodePath camera) {
     _win = window;
+    _scene = scene;
 
     _create_shadowmap(false);
     _create_shadow_manager(scene, camera);
@@ -229,4 +241,38 @@ void LightingPipeline::add_light(PT(RPLight) light) {
 
 void LightingPipeline::remove_light(PT(RPLight) light) {
     _light_manager->remove_light(light);
+}
+
+void LightingPipeline::prepare_scene() {
+    NodePathCollection plights = _scene.find_all_matches("**/+PointLight");
+    for (int i = 0; i < plights.get_num_paths(); i++) {
+        NodePath light = plights.get_path(i);
+        PointLight* light_node = (PointLight*) light.node();
+        PT(RPPointLight) rp_light = new RPPointLight();
+        rp_light->set_pos(light.get_pos(_scene));
+        rp_light->set_radius(light_node->get_max_distance());
+        rp_light->set_energy(20.0 * light_node->get_color().get_w());
+        rp_light->set_color(light_node->get_color().get_xyz());
+        rp_light->set_casts_shadows(light_node->is_shadow_caster());
+        rp_light->set_shadow_map_resolution(light_node->get_shadow_buffer_size().get_x());
+        rp_light->set_inner_radius(0.4);
+        add_light(rp_light);
+    }
+
+    NodePathCollection slights = _scene.find_all_matches("**/+Spotlight");
+    for (int i = 0; i < slights.get_num_paths(); i++) {
+      NodePath light = plights.get_path(i);
+        PointLight* light_node = (PointLight*) light.node();
+        PT(RPSpotLight) rp_light = new RPSpotLight();
+        rp_light->set_pos(light.get_pos(_scene));
+        rp_light->set_radius(light_node->get_max_distance());
+        rp_light->set_energy(20.0 * light_node->get_color().get_w());
+        rp_light->set_color(light_node->get_color().get_xyz());
+        rp_light->set_casts_shadows(light_node->is_shadow_caster());
+        rp_light->set_shadow_map_resolution(light_node->get_shadow_buffer_size().get_x());
+        rp_light->set_fov(light_node->get_exponent() / M_PI * 180.0);
+        LVecBase3f lpoint = light.get_mat(_scene).xform_vec((0, 0, -1));
+        rp_light->set_direction(lpoint);
+        add_light(rp_light);
+    }
 }
