@@ -18,6 +18,7 @@ PUBLISHED:
         bool has_srgb=false, bool has_alpha=false);
 
     void add_render_pass(char* name, Shader* shader=NULL);
+    NodePath get_scene();
 
 private:
     GraphicsWindow* _win;

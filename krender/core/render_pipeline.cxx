@@ -63,3 +63,7 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
 
     _passes.push_back(pass);
 }
+
+NodePath RenderPipeline::get_scene() {
+    return _scene;
+}
