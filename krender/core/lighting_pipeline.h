@@ -36,13 +36,17 @@ class TagStateManager;
 class EXPORT_CLASS LightingPipeline: public TypedWritableReferenceCount {
 PUBLISHED:
     LightingPipeline(GraphicsWindow* window, NodePath scene, NodePath camera);
+    void update();
     void add_light(PT(RPLight) light);
     void remove_light(PT(RPLight) light);
+    Texture* get_shadowmap();
+    Texture* get_light_data();
     void prepare_scene();
 
 private:
     GraphicsWindow* _win;
     NodePath _scene;
+    NodePath _camera;
     GraphicsOutput* _shadowmap_fbo;
     Texture* _shadowmap_tex;
 
@@ -67,7 +71,6 @@ private:
     void _cmd_remove_light(unsigned char* gpu_command_data);
     void _cmd_store_source(unsigned char* gpu_command_data);
     void _cmd_remove_sources(unsigned char* gpu_command_data);
-    void _update();
 
 public:
     static TypeHandle get_class_type() {

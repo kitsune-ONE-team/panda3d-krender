@@ -24,6 +24,7 @@ TypeHandle LightingPipeline::_type_handle;
 LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath scene, NodePath camera) {
     _win = window;
     _scene = scene;
+    _camera = camera;
 
     _create_shadowmap(false);
     _create_shadow_manager(scene, camera);
@@ -37,7 +38,7 @@ LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath scene, NodeP
 
 void LightingPipeline::_create_shadowmap(bool depth2color) {
     _atlas_size = 256;
-    _is_enabled = 1;
+    _is_enabled = true;
     unsigned int shadow_size = 512;
 
     // each point light containts 6 shadow sources (+X, -X, +Y, -Y, +Z, -Z)
@@ -190,9 +191,8 @@ void LightingPipeline::_cmd_remove_sources(unsigned char* gpu_command_data) {
     }
 }
 
-void LightingPipeline::_update() {
-    // cam_pos = builtins.base.camera.get_pos(builtins.base.render);
-    LPoint3 cam_pos(10000, 10000, 10000);
+void LightingPipeline::update() {
+    LPoint3 cam_pos = _camera.get_pos(_scene);
 
     if (_is_enabled)
         _light_manager->set_camera_pos(cam_pos);
@@ -241,6 +241,14 @@ void LightingPipeline::add_light(PT(RPLight) light) {
 
 void LightingPipeline::remove_light(PT(RPLight) light) {
     _light_manager->remove_light(light);
+}
+
+Texture* LightingPipeline::get_shadowmap() {
+    return _shadowmap_tex;
+}
+
+Texture* LightingPipeline::get_light_data() {
+    return _light_data_tex;
 }
 
 void LightingPipeline::prepare_scene() {

@@ -27,7 +27,7 @@ class kphys_build_ext(build_ext):
 if __name__ == "__main__":
     setuptools.setup(
         name='panda3d-krender',
-        version='0.0.5',
+        version='0.0.6',
         description='Deferred Render Pipeline for Panda3D',
         long_description=(
             'Deferred Render Pipeline for Panda3D '
