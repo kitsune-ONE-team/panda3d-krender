@@ -1,3 +1,3 @@
 import panda3d.core
 
-from krender.core import RenderPipeline, LightingPipeline
+from krender.core import RenderPipeline

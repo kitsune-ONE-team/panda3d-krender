@@ -9,20 +9,6 @@
 
 TypeHandle RenderPipeline::_type_handle;
 
-RenderPipeline::RenderPipeline(
-        GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
-        bool has_srgb, bool has_alpha) {
-    _win = window;
-    _camera = camera;
-    _camera2d = camera2d;
-    _render2d = render2d;
-    _has_srgb = has_srgb;
-    _has_alpha = has_alpha;
-
-    _scene = NodePath(new PandaNode("Scene"));
-    _scene.set_shader_input(ShaderInput("render_mode", 1));
-}
-
 void RenderPipeline::add_render_pass(char* name, Shader* shader) {
     RenderPass* pass;
 
@@ -33,7 +19,7 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
         // setup camera which which captures scene
         // and renders into FBO using default camera lens
         NodePath cam = pass->get_camera();
-        ((Camera*) cam.node())->set_scene(_scene);
+        ((Camera*) cam.node())->set_scene(get_scene());
         ((Camera*) cam.node())->set_camera_mask(1 << 0);
 
     } else {  // other render passes
@@ -62,8 +48,4 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
     plane.reparent_to(_render2d);
 
     _passes.push_back(pass);
-}
-
-NodePath RenderPipeline::get_scene() {
-    return _scene;
 }

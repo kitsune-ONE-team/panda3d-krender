@@ -9,27 +9,29 @@
 #include "typedWritableReferenceCount.h"
 
 #include "krender/core/render_pass.h"
+#include "krender/core/lighting_pipeline.h"
 
 
-class EXPORT_CLASS RenderPipeline: public TypedWritableReferenceCount {
+class EXPORT_CLASS RenderPipeline: public LightingPipeline {
 PUBLISHED:
     RenderPipeline(
-        GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
-        bool has_srgb=false, bool has_alpha=false);
+            GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
+            bool has_srgb=false, bool has_alpha=false): LightingPipeline(window, camera) {
+        _camera2d = camera2d;
+        _render2d = render2d;
+        _has_srgb = has_srgb;
+        _has_alpha = has_alpha;
+    };
 
     void add_render_pass(char* name, Shader* shader=NULL);
-    NodePath get_scene();
 
 private:
-    GraphicsWindow* _win;
-    NodePath _camera;
     NodePath _camera2d;
     NodePath _render2d;
     bool _has_srgb;
     bool _has_alpha;
 
     int _index;
-    NodePath _scene;
     std::vector<RenderPass*> _passes;
     static TypeHandle _type_handle;
 
@@ -39,6 +41,7 @@ public:
     }
     static void init_type() {
         TypedWritableReferenceCount::init_type();
+        LightingPipeline::init_type();
         register_type(
             _type_handle, "RenderPipeline",
             TypedWritableReferenceCount::get_class_type());

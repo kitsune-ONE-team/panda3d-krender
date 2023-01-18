@@ -33,20 +33,25 @@ class TagStateManager;
 #define RGBA32 (R32 * 4)
 
 
-class EXPORT_CLASS LightingPipeline: public TypedWritableReferenceCount {
+class LightingPipeline: public TypedWritableReferenceCount {
 PUBLISHED:
-    LightingPipeline(GraphicsWindow* window, NodePath scene, NodePath camera);
+    NodePath get_scene();
     void update();
     void add_light(PT(RPLight) light);
     void remove_light(PT(RPLight) light);
-    Texture* get_shadowmap();
-    Texture* get_light_data();
     void prepare_scene();
 
-private:
+public:
+    LightingPipeline(GraphicsWindow* window, NodePath camera);
+    Texture* get_shadowmap();
+    Texture* get_light_data();
+
+protected:
     GraphicsWindow* _win;
-    NodePath _scene;
     NodePath _camera;
+
+private:
+    NodePath _scene;
     GraphicsOutput* _shadowmap_fbo;
     Texture* _shadowmap_tex;
 

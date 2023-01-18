@@ -21,13 +21,15 @@ class RPSpotLight;
 
 TypeHandle LightingPipeline::_type_handle;
 
-LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath scene, NodePath camera) {
+LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath camera) {
     _win = window;
-    _scene = scene;
     _camera = camera;
 
+    _scene = NodePath(new PandaNode("Scene"));
+    _scene.set_shader_input(ShaderInput("render_mode", 1));
+
     _create_shadowmap(false);
-    _create_shadow_manager(scene, camera);
+    _create_shadow_manager(_scene, camera);
     _create_queue();
     _create_light_manager();
 }
@@ -192,6 +194,10 @@ void LightingPipeline::_cmd_remove_sources(unsigned char* gpu_command_data) {
     for (int i = 0; i <= (int) countf; i++) {
         memset(_light_data->contents.shadow_sources[slot0 + i].data, 0, sizeof(ShadowSourceInfo));
     }
+}
+
+NodePath LightingPipeline::get_scene() {
+  return _scene;
 }
 
 void LightingPipeline::update() {
