@@ -20,7 +20,7 @@ struct LightData_s {
 
 union LightData {
     struct LightData_s contents;
-    unsigned char* data[LIGHT_DATA_SIZE];
+    unsigned char data[LIGHT_DATA_SIZE];
 };
 
 #endif

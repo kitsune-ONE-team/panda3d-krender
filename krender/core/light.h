@@ -7,29 +7,29 @@
 
 struct LightUnpacked_s {
     // written by LightManager
-    int32_t slot;
+    PN_float32 slot;
     // written by rpLight
-    int32_t type;
-    int32_t ies;
-    int32_t ss0;  // -1 if not casts shadows
-    int32_t pos[3];  // vec3
-    int32_t color[3];  // vec3
+    PN_float32 type;
+    PN_float32 ies;
+    PN_float32 ss0;  // -1 if not casts shadows
+    PN_float32 pos[3];  // vec3
+    PN_float32 color[3];  // vec3
     // written by rpPointLight
     PN_float32 radius;
     PN_float32 iradius;
 };
 
 struct LightPacked_s {
-    int32_t slot;
-    int32_t type;
-    int32_t ies;
-    unsigned char* data[LIGHT_INFO_SIZE];
+    PN_float32 slot;
+    PN_float32 type;
+    PN_float32 ies;
+    unsigned char data[LIGHT_INFO_SIZE];
 };
 
 struct LightInfo_s {
-    int32_t ss0;
-    int32_t pos[3];
-    int32_t color[3];
+    PN_float32 ss0;
+    PN_float32 pos[3];
+    PN_float32 color[3];
     PN_float32 radius;
     PN_float32 iradius;
 };
@@ -37,12 +37,12 @@ struct LightInfo_s {
 union LightDef {
     struct LightUnpacked_s unpacked;
     struct LightPacked_s packed;
-    unsigned char* data[LIGHT_DEF_SIZE];
+    unsigned char data[LIGHT_DEF_SIZE];
 };
 
 union LightInfo {
     struct LightInfo_s info;
-    unsigned char* data[LIGHT_INFO_SIZE];
+    unsigned char data[LIGHT_INFO_SIZE];
 };
 
 #endif
