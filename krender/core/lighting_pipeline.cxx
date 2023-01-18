@@ -117,7 +117,6 @@ void LightingPipeline::_create_shadow_manager(NodePath scene, NodePath camera) {
         NodePath camera = region->get_camera();
         if (!camera.is_empty()) {
             ((Camera*) camera.node())->set_initial_state(state);
-            // camera.node()->set_initial_state(state);
             // camera.node().set_camera_mask(CAMERA_MASK_SHADOW);
         }
     }
@@ -142,52 +141,56 @@ void LightingPipeline::_create_light_manager() {
     _light_manager->set_command_list(_gpu_command_list);
     _light_manager->set_shadow_manager(_shadow_manager);
 
-    _light_data = (LightData*) malloc(sizeof(LightData*));
+    _light_data = (LightData*) malloc(sizeof(LightData));
     _light_data_tex = new Texture("Light Data");
     _light_data_tex->setup_buffer_texture(
-        sizeof(_light_data),
+        sizeof(_light_data->data),
         Texture::T_float,
         Texture::F_rgba32,
         GeomEnums::UH_static);
 }
 
 void LightingPipeline::_cmd_store_light(unsigned char* gpu_command_data) {
-    LightDef* light = (LightDef*) malloc(sizeof(LightDef*));
+    LightDef* light = (LightDef*) malloc(sizeof(LightDef));
     // read light
-    memcpy(light, gpu_command_data, sizeof(light));
+    memcpy(light->data, gpu_command_data, sizeof(light->data));
     // store light info
-    memcpy(_light_data->contents.lights[light->packed.slot].data,
+    int slot = (int) light->packed.slot;
+    memcpy(_light_data->contents.lights[slot].data,
            light->packed.data, sizeof(light->packed.data));
+    free(light);
 }
 
 void LightingPipeline::_cmd_remove_light(unsigned char* gpu_command_data) {
-    int32_t slot;
+    PN_float32 slotf;
     // read light slot
-    memcpy(&slot, gpu_command_data, sizeof(&slot));
+    memcpy(&slotf, gpu_command_data, sizeof(slotf));
     // clear light info
-    memset(_light_data->contents.lights[slot].data,
-           0, sizeof(LightInfo*));
+    int slot = (int) slotf;
+    memset(_light_data->contents.lights[slot].data, 0, sizeof(LightInfo));
 }
 
 void LightingPipeline::_cmd_store_source(unsigned char* gpu_command_data) {
-    ShadowSourceDef* ss = (ShadowSourceDef*) malloc(sizeof(ShadowSourceDef*));
+    ShadowSourceDef* ss = (ShadowSourceDef*) malloc(sizeof(ShadowSourceDef));
     // read shadow source
-    memcpy(ss, gpu_command_data, sizeof(ss));
+    memcpy(ss->data, gpu_command_data, sizeof(ss->data));
     // store shadow source info
-    memcpy(_light_data->contents.shadow_sources[ss->packed.slot].data,
+    int slot = (int) ss->packed.slot;
+    memcpy(_light_data->contents.shadow_sources[slot].data,
            ss->packed.data, sizeof(ss->packed.data));
+    free(ss);
 }
 
 void LightingPipeline::_cmd_remove_sources(unsigned char* gpu_command_data) {
-    int32_t slot0;
-    int32_t count;
+    PN_float32 slot0f;
+    PN_float32 countf;
     // read first shadow source slot and count
-    memcpy(&slot0, gpu_command_data, sizeof(&slot0));
-    memcpy(&count, gpu_command_data + 4, sizeof(&count));
+    memcpy(&slot0f, gpu_command_data, sizeof(slot0f));
+    memcpy(&countf, gpu_command_data + sizeof(slot0f), sizeof(countf));
     // clear shadow sources info
-    for (int i = 0; i <= count; i++) {
-        memset(_light_data->contents.shadow_sources[slot0 + i].data,
-               0, sizeof(ShadowSourceInfo*));
+    int slot0 = (int) slot0f;
+    for (int i = 0; i <= (int) countf; i++) {
+        memset(_light_data->contents.shadow_sources[slot0 + i].data, 0, sizeof(ShadowSourceInfo));
     }
 }
 
@@ -209,23 +212,24 @@ void LightingPipeline::update() {
 
     for (int i = 0; i < num_commands; i++) {
         int index = i * GPU_COMMAND_SIZE * R32;
-        int32_t command;
-        memcpy(&command, gpu_command_data.p()+index, sizeof(&command));
-        index++;
 
-        switch (command) {
+        PN_float32 command;
+        memcpy(&command, gpu_command_data.p()+index, sizeof(command));
+        index += sizeof(command);
+
+        switch ((int) command) {
         default:
             break;
-        case 1:  // CMD_store_light
+        case GPUCommand::CMD_store_light:
             _cmd_store_light(gpu_command_data.p()+index);
             break;
-        case 2:  // CMD_remove_light
+        case GPUCommand::CMD_remove_light:
             _cmd_remove_light(gpu_command_data.p()+index);
             break;
-        case 3:  // CMD_store_source
+        case GPUCommand::CMD_store_source:
             _cmd_store_source(gpu_command_data.p()+index);
             break;
-        case 4:  // CMD_remove_sources
+        case GPUCommand::CMD_remove_sources:
             _cmd_remove_sources(gpu_command_data.p()+index);
             break;
         }
