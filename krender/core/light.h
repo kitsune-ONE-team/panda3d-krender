@@ -1,6 +1,8 @@
 #ifndef CORE_LIGHT_H
 #define CORE_LIGHT_H
 
+#include "numeric_types.h"
+
 #define LIGHT_INFO_SIZE (4 + (4 * 3) + (4 * 3) + 4 + 4)
 #define LIGHT_DEF_SIZE (4 + 4 + 4 + LIGHT_INFO_SIZE)
 
@@ -23,7 +25,7 @@ struct LightPacked_s {
     PN_float32 slot;
     PN_float32 type;
     PN_float32 ies;
-    unsigned char data[LIGHT_INFO_SIZE];
+    unsigned char light_info[LIGHT_INFO_SIZE];
 };
 
 struct LightInfo_s {
