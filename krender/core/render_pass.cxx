@@ -52,6 +52,8 @@ GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool h
     WindowProperties props = win->get_properties();
     int w = props.get_x_size();
     int h = props.get_y_size();
+    char* tex_name;
+    Texture* t;
 
     FrameBufferProperties* fbp = new FrameBufferProperties();
     fbp->set_rgba_bits(1, 1, 1, 1);
@@ -62,17 +64,18 @@ GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool h
             fbp->set_srgb_color(true);
     }
 
-    char* tex_name = (char*) malloc((strlen(_name) + strlen("_color")) * sizeof(char));
-    sprintf(tex_name, "%s_color", _name);
-    Texture* t = new Texture(tex_name);
-
-    GraphicsOutput* fbo = win->make_texture_buffer(_name, w, h, t, false, fbp);
+    GraphicsOutput* fbo = win->make_texture_buffer(_name, w, h, nullptr, false, fbp);
     fbo->set_sort(_index - 10);
     if (has_alpha)
         fbo->set_clear_color(LVecBase4(0, 0, 0, 0));
     else
         fbo->set_clear_color(LVecBase4(0, 0, 0, 1));
-    // fbo->clear_render_textures();
+    fbo->clear_render_textures();
+
+    tex_name = (char*) malloc((strlen(_name) + strlen("_color")) * sizeof(char));
+    sprintf(tex_name, "%s_color", _name);
+    t = new Texture(tex_name);
+    fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_color);
     _tex.push_back(t);
 
     return fbo;
@@ -88,19 +91,13 @@ void RenderPass::_make_textures() {
     tex_name = (char*) malloc((strlen(_name) + strlen("_depth")) * sizeof(char));
     sprintf(tex_name, "%s_depth", _name);
     t = new Texture(tex_name);
-    _fbo->add_render_texture(
-        t,
-        GraphicsOutput::RTM_bind_or_copy,
-        GraphicsOutput::RTP_depth);
+    _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_depth);
     _tex.push_back(t);
 
     tex_name = (char*) malloc((strlen(_name) + strlen("_emissive")) * sizeof(char));
     sprintf(tex_name, "%s_emissive", _name);
     t = new Texture(tex_name);
-    _fbo->add_render_texture(
-        t,
-        GraphicsOutput::RTM_bind_or_copy,
-        GraphicsOutput::RTP_aux_rgba_0);
+    _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_aux_rgba_0);
     _tex.push_back(t);
 }
 

@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "pandabase.h"
 #include "graphicsWindow.h"
 #include "nodePath.h"
+#include "pandabase.h"
 #include "typedWritableReferenceCount.h"
 
 #include "krender/core/render_pass.h"
@@ -16,7 +16,8 @@ class EXPORT_CLASS RenderPipeline: public LightingPipeline {
 PUBLISHED:
     RenderPipeline(
             GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
-            bool has_srgb=false, bool has_alpha=false): LightingPipeline(window, camera) {
+            unsigned int shadow_size=512,
+            bool has_srgb=false, bool has_alpha=false): LightingPipeline(window, camera, shadow_size) {
         _camera2d = camera2d;
         _render2d = render2d;
         _has_srgb = has_srgb;

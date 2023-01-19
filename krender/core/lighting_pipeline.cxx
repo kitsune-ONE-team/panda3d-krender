@@ -8,6 +8,7 @@
 #include "texture.h"
 
 #include "krender/core/lighting_pipeline.h"
+#include "krender/core/helpers.h"
 
 #ifdef CPPPARSER  // interrogate
 class RPPointLight;
@@ -18,20 +19,24 @@ class RPSpotLight;
 #include "rpSpotLight.h"
 #endif
 
+// #define LP_DEBUG 1
+
 
 TypeHandle LightingPipeline::_type_handle;
 
-LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath camera) {
+LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath camera, unsigned int shadow_size) {
     _win = window;
     _camera = camera;
+    _shadow_size = shadow_size;
 
     _scene = NodePath(new PandaNode("Scene"));
     _scene.set_shader_input(ShaderInput("render_mode", 1));
 
     _create_shadowmap(false);
-    _create_shadow_manager(_scene, camera);
+    _create_shadow_manager();
     _create_queue();
     _create_light_manager();
+    _update_shader_inputs();
 }
 
 // LightingPipeline::~LightingPipeline() {
@@ -40,15 +45,13 @@ LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath camera) {
 
 void LightingPipeline::_create_shadowmap(bool depth2color) {
     _atlas_size = 256;
-    _is_enabled = true;
-    unsigned int shadow_size = 512;
 
     // each point light containts 6 shadow sources (+X, -X, +Y, -Y, +Z, -Z)
     // defining shadow sources rows/columns
     // shadow sources are placed in a matrix:
     // rows * columns -> ss_rc * ss_rc
     int ss_rc = ceil(sqrt(MAX_LIGHTS * 6));
-    while (ss_rc * shadow_size > _atlas_size)
+    while (ss_rc * _shadow_size > _atlas_size)
         _atlas_size *= 2;  // double atlas size
 
     FrameBufferProperties* fbp = new FrameBufferProperties();
@@ -61,15 +64,11 @@ void LightingPipeline::_create_shadowmap(bool depth2color) {
         fbp->set_float_depth(true);
     }
 
-    _shadowmap_tex = new Texture("lighting_pipeline.shadowmap");
-    if (_win->get_gsg()->get_supports_shadow_filter()) {
-        _shadowmap_tex->set_minfilter(SamplerState::FT_shadow);
-        _shadowmap_tex->set_magfilter(SamplerState::FT_shadow);
-    }
-
+    // create FBO
     _shadowmap_fbo = _win->make_texture_buffer(
-        "lighting_pipeline",
-        _atlas_size, _atlas_size, _shadowmap_tex, false, fbp);
+        "lighting_pipeline", _atlas_size, _atlas_size,
+        nullptr, false, fbp);
+    _shadowmap_fbo->clear_render_textures();
     _shadowmap_fbo->disable_clears();
     _shadowmap_fbo->get_overlay_display_region()->disable_clears();
     _shadowmap_fbo->get_overlay_display_region()->set_active(false);
@@ -83,26 +82,36 @@ void LightingPipeline::_create_shadowmap(bool depth2color) {
         region->disable_clears();
         region->set_active(false);
     }
+
+    // create shadowmap atlas texture
+    _shadowmap_tex = new Texture("Shadowmap");
+    // if (_win->get_gsg()->get_supports_shadow_filter()) {
+    //     _shadowmap_tex->set_minfilter(SamplerState::FT_shadow);
+    //     _shadowmap_tex->set_magfilter(SamplerState::FT_shadow);
+    // }
+    _shadowmap_fbo->add_render_texture(
+        _shadowmap_tex, GraphicsOutput::RTM_bind_or_copy,
+        depth2color ? GraphicsOutput::RTP_color : GraphicsOutput::RTP_depth);
 }
 
-void LightingPipeline::_create_shadow_manager(NodePath scene, NodePath camera) {
-    _tag_state_manager = new TagStateManager(camera);
+void LightingPipeline::_create_shadow_manager() {
+    _tag_state_manager = new TagStateManager(_camera);
 
     // shadow sources/atlas manager
     _shadow_manager = new ShadowManager();
     _shadow_manager->set_max_updates(MAX_UPDATES);
-    _shadow_manager->set_scene(scene);
+    _shadow_manager->set_scene(_scene);
     _shadow_manager->set_tag_state_manager(_tag_state_manager);
     _shadow_manager->set_atlas_size(_atlas_size);
     _shadow_manager->set_atlas_graphics_output(_shadowmap_fbo);
     _shadow_manager->init();
 
-    // context = {
-    //     'DEPTH2COLOR': 1 if DEPTH2COLOR else 0,
-    // }
-    // shader = shared.make_shader('shadow', vert_context=context, frag_context=context);
+    Shader* shader = Shader::load(
+        Shader::SL_GLSL,
+        Filename("shader/shadow.vert.glsl"),
+        Filename("shader/shadow.frag.glsl"));
     ConstPointerTo<RenderState> state = RenderState::make_empty();
-    // state = state.set_attrib(ShaderAttrib.make(shader, 200), 200);
+    state = state->set_attrib(ShaderAttrib::make(shader, 200), 200);
 
     // reconfiture FBO's display regions
     // which was created by ShadowManager
@@ -139,7 +148,7 @@ void LightingPipeline::_create_queue() {
 
 void LightingPipeline::_create_light_manager() {
     _light_manager = new InternalLightManager();
-    _light_manager->set_shadow_update_distance(1000);
+    _light_manager->set_shadow_update_distance(10000);
     _light_manager->set_command_list(_gpu_command_list);
     _light_manager->set_shadow_manager(_shadow_manager);
 
@@ -153,13 +162,17 @@ void LightingPipeline::_create_light_manager() {
 }
 
 void LightingPipeline::_cmd_store_light(unsigned char* gpu_command_data) {
-    LightDef* light = (LightDef*) malloc(sizeof(LightDef));
-    // read light
+    LightPacket* light = (LightPacket*) malloc(sizeof(LightPacket));
+    // read full light packet
     memcpy(light->data, gpu_command_data, sizeof(light->data));
+#ifdef LP_DEBUG
+    printf("CMD_store_light: ");
+    print_light_packet(light);
+#endif
     // store light info
-    int slot = (int) light->packed.slot;
+    int slot = (int) light->fields.slot;
     memcpy(_light_data->contents.lights[slot].data,
-           light->packed.data, sizeof(light->packed.data));
+           light->fields.info.data, sizeof(LightInfo));
     free(light);
 }
 
@@ -167,19 +180,26 @@ void LightingPipeline::_cmd_remove_light(unsigned char* gpu_command_data) {
     PN_float32 slotf;
     // read light slot
     memcpy(&slotf, gpu_command_data, sizeof(slotf));
-    // clear light info
     int slot = (int) slotf;
+#ifdef LP_DEBUG
+    printf("CMD_remove_light: slot %d\n", slot);
+#endif
+    // clear light info
     memset(_light_data->contents.lights[slot].data, 0, sizeof(LightInfo));
 }
 
 void LightingPipeline::_cmd_store_source(unsigned char* gpu_command_data) {
-    ShadowSourceDef* ss = (ShadowSourceDef*) malloc(sizeof(ShadowSourceDef));
+    ShadowSourcePacket* ss = (ShadowSourcePacket*) malloc(sizeof(ShadowSourcePacket));
     // read shadow source
     memcpy(ss->data, gpu_command_data, sizeof(ss->data));
+#ifdef LP_DEBUG
+    printf("CMD_store_source: ");
+    print_shadow_source_packet(ss);
+#endif
     // store shadow source info
-    int slot = (int) ss->packed.slot;
+    int slot = (int) ss->fields.slot;
     memcpy(_light_data->contents.shadow_sources[slot].data,
-           ss->packed.data, sizeof(ss->packed.data));
+           ss->fields.info.data, sizeof(ShadowSourceInfo));
     free(ss);
 }
 
@@ -189,60 +209,85 @@ void LightingPipeline::_cmd_remove_sources(unsigned char* gpu_command_data) {
     // read first shadow source slot and count
     memcpy(&slot0f, gpu_command_data, sizeof(slot0f));
     memcpy(&countf, gpu_command_data + sizeof(slot0f), sizeof(countf));
-    // clear shadow sources info
     int slot0 = (int) slot0f;
-    for (int i = 0; i <= (int) countf; i++) {
-        memset(_light_data->contents.shadow_sources[slot0 + i].data, 0, sizeof(ShadowSourceInfo));
+    int count = (int) countf;
+#ifdef LP_DEBUG
+    printf("CMD_remove_sources: slots [%d:%d]\n", slot0, slot0 + count);
+#endif
+    // clear shadow sources info
+    for (int i = 0; i <= count; i++) {
+        memset(_light_data->contents.shadow_sources[slot0 + i].data,
+               0, sizeof(ShadowSourceInfo));
     }
 }
 
 NodePath LightingPipeline::get_scene() {
-  return _scene;
+    return _scene;
+}
+
+void LightingPipeline::_update_shader_inputs() {
+    _scene.set_shader_input(ShaderInput("shadowmap", _shadowmap_tex));
+    _scene.set_shader_input(ShaderInput("light_data", _light_data_tex));
 }
 
 void LightingPipeline::update() {
     LPoint3 cam_pos = _camera.get_pos(_scene);
+    // printf("%f %f %f\n", cam_pos.get_x(), cam_pos.get_y(), cam_pos.get_z());
 
-    if (_is_enabled)
+    // if (_is_enabled)
+    if (1)
         _light_manager->set_camera_pos(cam_pos);
     else
-        _light_manager->set_camera_pos(LPoint3(10000, 10000, 10000));
+        _light_manager->set_camera_pos(LPoint3(0, 0, 0));
 
     _light_manager->update();
     _shadow_manager->update();
 
     PTA_uchar gpu_command_data = _gpu_command_data->modify_ram_image();
     int num_commands = _gpu_command_list->write_commands_to(gpu_command_data, GPU_COMMAND_LIST_LIMIT);
-    if (!num_commands)
-        return;
+    if (num_commands) {
+#ifdef LP_DEBUG
+        printf("GPU COMMANDS QUEUED: %d\n", num_commands);
+#endif
 
-    for (int i = 0; i < num_commands; i++) {
-        int index = i * GPU_COMMAND_SIZE * R32;
+        for (int i = 0; i < num_commands; i++) {
+            int index = i * GPU_COMMAND_SIZE * R32;
 
-        PN_float32 command;
-        memcpy(&command, gpu_command_data.p()+index, sizeof(command));
-        index += sizeof(command);
+            PN_float32 command;
+            memcpy(&command, gpu_command_data.p()+index, sizeof(command));
+            index += sizeof(command);
 
-        switch ((int) command) {
-        default:
-            break;
-        case GPUCommand::CMD_store_light:
-            _cmd_store_light(gpu_command_data.p()+index);
-            break;
-        case GPUCommand::CMD_remove_light:
-            _cmd_remove_light(gpu_command_data.p()+index);
-            break;
-        case GPUCommand::CMD_store_source:
-            _cmd_store_source(gpu_command_data.p()+index);
-            break;
-        case GPUCommand::CMD_remove_sources:
-            _cmd_remove_sources(gpu_command_data.p()+index);
-            break;
+            switch ((int) command) {
+            default:
+                break;
+            case GPUCommand::CMD_store_light:
+                _cmd_store_light(gpu_command_data.p()+index);
+                break;
+            case GPUCommand::CMD_remove_light:
+                _cmd_remove_light(gpu_command_data.p()+index);
+                break;
+            case GPUCommand::CMD_store_source:
+                _cmd_store_source(gpu_command_data.p()+index);
+                break;
+            case GPUCommand::CMD_remove_sources:
+                _cmd_remove_sources(gpu_command_data.p()+index);
+                break;
+            }
         }
+
+        PTA_uchar light_data = _light_data_tex->modify_ram_image();
+        memcpy(light_data.p(), _light_data->data, sizeof(_light_data->data));
     }
 
-    PTA_uchar light_data = _light_data_tex->modify_ram_image();
-    memcpy(light_data.p(), _light_data->data, sizeof(_light_data->data));
+    _update_shader_inputs();
+}
+
+int LightingPipeline::get_num_commands() {
+    return _gpu_command_list->get_num_commands();
+}
+
+int LightingPipeline::get_num_updates() {
+    return MAX_UPDATES - _shadow_manager->get_num_update_slots_left();
 }
 
 void LightingPipeline::add_light(PT(RPLight) light) {
@@ -251,14 +296,6 @@ void LightingPipeline::add_light(PT(RPLight) light) {
 
 void LightingPipeline::remove_light(PT(RPLight) light) {
     _light_manager->remove_light(light);
-}
-
-Texture* LightingPipeline::get_shadowmap() {
-    return _shadowmap_tex;
-}
-
-Texture* LightingPipeline::get_light_data() {
-    return _light_data_tex;
 }
 
 void LightingPipeline::prepare_scene() {
@@ -272,22 +309,24 @@ void LightingPipeline::prepare_scene() {
         rp_light->set_energy(20.0 * light_node->get_color().get_w());
         rp_light->set_color(light_node->get_color().get_xyz());
         rp_light->set_casts_shadows(light_node->is_shadow_caster());
-        rp_light->set_shadow_map_resolution(light_node->get_shadow_buffer_size().get_x());
+        // rp_light->set_shadow_map_resolution(light_node->get_shadow_buffer_size().get_x());
+        rp_light->set_shadow_map_resolution(_shadow_size);
         rp_light->set_inner_radius(0.4);
         add_light(rp_light);
     }
 
     NodePathCollection slights = _scene.find_all_matches("**/+Spotlight");
     for (int i = 0; i < slights.get_num_paths(); i++) {
-      NodePath light = plights.get_path(i);
-        PointLight* light_node = (PointLight*) light.node();
+        NodePath light = slights.get_path(i);
+        Spotlight* light_node = (Spotlight*) light.node();
         PT(RPSpotLight) rp_light = new RPSpotLight();
         rp_light->set_pos(light.get_pos(_scene));
         rp_light->set_radius(light_node->get_max_distance());
         rp_light->set_energy(20.0 * light_node->get_color().get_w());
         rp_light->set_color(light_node->get_color().get_xyz());
         rp_light->set_casts_shadows(light_node->is_shadow_caster());
-        rp_light->set_shadow_map_resolution(light_node->get_shadow_buffer_size().get_x());
+        // rp_light->set_shadow_map_resolution(light_node->get_shadow_buffer_size().get_x());
+        rp_light->set_shadow_map_resolution(_shadow_size);
         rp_light->set_fov(light_node->get_exponent() / M_PI * 180.0);
         LVecBase3f lpoint = light.get_mat(_scene).xform_vec((0, 0, -1));
         rp_light->set_direction(lpoint);

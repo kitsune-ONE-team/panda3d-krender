@@ -28,7 +28,7 @@ class TagStateManager;
 
 #define GPU_COMMAND_LIST_LIMIT 1024
 #define GPU_COMMAND_SIZE 32
-#define MAX_UPDATES 1
+#define MAX_UPDATES 32
 #define R32 4
 #define RGBA32 (R32 * 4)
 
@@ -37,21 +37,24 @@ class LightingPipeline: public TypedWritableReferenceCount {
 PUBLISHED:
     NodePath get_scene();
     void update();
+    int get_num_commands();
+    int get_num_updates();
     void add_light(PT(RPLight) light);
     void remove_light(PT(RPLight) light);
     void prepare_scene();
 
 public:
-    LightingPipeline(GraphicsWindow* window, NodePath camera);
-    Texture* get_shadowmap();
-    Texture* get_light_data();
+    LightingPipeline(GraphicsWindow* window, NodePath camera, unsigned int shadow_size=512);
 
 protected:
     GraphicsWindow* _win;
     NodePath _camera;
+    Filename _path;
 
 private:
     NodePath _scene;
+    unsigned int _shadow_size;
+
     GraphicsOutput* _shadowmap_fbo;
     Texture* _shadowmap_tex;
 
@@ -65,13 +68,13 @@ private:
     Texture* _light_data_tex;
 
     short _atlas_size;
-    bool _is_enabled;
     static TypeHandle _type_handle;
 
     void _create_shadowmap(bool depth2color);
-    void _create_shadow_manager(NodePath scene, NodePath camera);
+    void _create_shadow_manager();
     void _create_queue();
     void _create_light_manager();
+    void _update_shader_inputs();
     void _cmd_store_light(unsigned char* gpu_command_data);
     void _cmd_remove_light(unsigned char* gpu_command_data);
     void _cmd_store_source(unsigned char* gpu_command_data);
