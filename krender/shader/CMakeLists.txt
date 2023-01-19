@@ -1,0 +1,17 @@
+set(SHADERS
+  ${CMAKE_CURRENT_SOURCE_DIR}/base.inc.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/default.frag.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/default.vert.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/defines.inc.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shadow.frag.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/shadow.vert.glsl
+)
+
+install(
+  FILES
+  ${SHADERS}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/krender/shader
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE
+  GROUP_READ
+  WORLD_READ)

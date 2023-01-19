@@ -10,3 +10,4 @@ if(${INSTALL_PY} MATCHES "ON")
 endif()
 
 add_subdirectory(core)
+add_subdirectory(shader)
