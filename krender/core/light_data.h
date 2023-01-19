@@ -6,11 +6,9 @@ union LightInfo;
 union ShadowSourceInfo;
 #endif
 
+#include "krender/defines.h"
 #include "krender/core/light.h"
 #include "krender/core/shadow_source.h"
-
-#define MAX_LIGHTS 16
-#define LIGHT_DATA_SIZE ((LIGHT_INFO_SIZE * MAX_LIGHTS) + (SHADOW_SOURCE_INFO_SIZE * MAX_LIGHTS * 6))
 
 
 struct LightData_s {

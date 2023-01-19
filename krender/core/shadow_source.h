@@ -3,37 +3,29 @@
 
 #include "numeric_types.h"
 
-#define SHADOW_SOURCE_INFO_SIZE ((4 * 4 * 4) + (4 * 4))
-#define SHADOW_SOURCE_DEF_SIZE (4 + SHADOW_SOURCE_INFO_SIZE)
+#include "krender/defines.h"
 
 
-struct ShadowSourceUnpacked_s {
-    // written by LightManager
-    PN_float32 slot;
+struct ShadowSourceInfo_s {
     // written by ShadowSource
     PN_float32 mvp[4 * 4];  // mat4
     PN_float32 uv[4];  // vec4
 };
 
-struct ShadowSourcePacked_s {
-    PN_float32 slot;
-    unsigned char ss_info[SHADOW_SOURCE_INFO_SIZE];
-};
-
-struct ShadowSourceInfo_s {
-    PN_float32 mvp[4 * 4];
-    PN_float32 uv[4];
-};
-
-union ShadowSourceDef {
-    struct ShadowSourceUnpacked_s unpacked;
-    struct ShadowSourcePacked_s packed;
-    unsigned char data[SHADOW_SOURCE_DEF_SIZE];
-};
-
 union ShadowSourceInfo {
-    struct ShadowSourceInfo_s info;
+    struct ShadowSourceInfo_s fields;
     unsigned char data[SHADOW_SOURCE_INFO_SIZE];
+};
+
+struct ShadowSourcePacket_s {
+    // written by LightManager
+    PN_float32 slot;
+    ShadowSourceInfo info;
+};
+
+union ShadowSourcePacket {
+    struct ShadowSourcePacket_s fields;
+    unsigned char data[SHADOW_SOURCE_PACKET_SIZE];
 };
 
 #endif

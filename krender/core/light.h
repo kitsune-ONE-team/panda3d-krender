@@ -3,48 +3,36 @@
 
 #include "numeric_types.h"
 
-#define LIGHT_INFO_SIZE (4 + (4 * 3) + (4 * 3) + 4 + 4)
-#define LIGHT_DEF_SIZE (4 + 4 + 4 + LIGHT_INFO_SIZE)
+#include "krender/defines.h"
 
 
-struct LightUnpacked_s {
-    // written by LightManager
-    PN_float32 slot;
-    // written by rpLight
-    PN_float32 type;
-    PN_float32 ies;
+struct LightInfo_s {
+    // written by RPLight
     PN_float32 ss0;  // -1 if not casts shadows
     PN_float32 pos[3];  // vec3
     PN_float32 color[3];  // vec3
-    // written by rpPointLight
+    // written by RPPointLight
     PN_float32 radius;
     PN_float32 iradius;
-};
-
-struct LightPacked_s {
-    PN_float32 slot;
-    PN_float32 type;
-    PN_float32 ies;
-    unsigned char light_info[LIGHT_INFO_SIZE];
-};
-
-struct LightInfo_s {
-    PN_float32 ss0;
-    PN_float32 pos[3];
-    PN_float32 color[3];
-    PN_float32 radius;
-    PN_float32 iradius;
-};
-
-union LightDef {
-    struct LightUnpacked_s unpacked;
-    struct LightPacked_s packed;
-    unsigned char data[LIGHT_DEF_SIZE];
 };
 
 union LightInfo {
-    struct LightInfo_s info;
+    struct LightInfo_s fields;
     unsigned char data[LIGHT_INFO_SIZE];
+};
+
+struct LightPacket_s {
+    // written by LightManager
+    PN_float32 slot;
+    // written by RPLight
+    PN_float32 type;
+    PN_float32 ies;
+    LightInfo info;
+};
+
+union LightPacket {
+    struct LightPacket_s fields;
+    unsigned char data[LIGHT_PACKET_SIZE];
 };
 
 #endif
