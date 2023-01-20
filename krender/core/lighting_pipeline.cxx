@@ -108,8 +108,8 @@ void LightingPipeline::_create_shadow_manager() {
 
     Shader* shader = Shader::load(
         Shader::SL_GLSL,
-        Filename("shader/shadow.vert.glsl"),
-        Filename("shader/shadow.frag.glsl"));
+        Filename("krender/shader/shadow.vert.glsl"),
+        Filename("krender/shader/shadow.frag.glsl"));
     ConstPointerTo<RenderState> state = RenderState::make_empty();
     state = state->set_attrib(ShaderAttrib::make(shader, 200), 200);
 

@@ -29,8 +29,6 @@ class TagStateManager;
 #define GPU_COMMAND_LIST_LIMIT 1024
 #define GPU_COMMAND_SIZE 32
 #define MAX_UPDATES 32
-#define R32 4
-#define RGBA32 (R32 * 4)
 
 
 class LightingPipeline: public TypedWritableReferenceCount {

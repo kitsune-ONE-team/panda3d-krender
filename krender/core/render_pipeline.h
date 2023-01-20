@@ -23,7 +23,6 @@ PUBLISHED:
         _has_srgb = has_srgb;
         _has_alpha = has_alpha;
     };
-
     void add_render_pass(char* name, Shader* shader=NULL);
 
 private:
@@ -41,7 +40,6 @@ public:
         return _type_handle;
     }
     static void init_type() {
-        TypedWritableReferenceCount::init_type();
         LightingPipeline::init_type();
         register_type(
             _type_handle, "RenderPipeline",

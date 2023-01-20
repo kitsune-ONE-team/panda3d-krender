@@ -36,7 +36,7 @@ void print_light_packet(LightPacket* light) {
            light->fields.info.fields.color[1],
            light->fields.info.fields.color[2]);
     printf("        radius: %f\n", light->fields.info.fields.radius);
-    printf("        iradius: %f\n", light->fields.info.fields.iradius);
+    printf("        iradius: %f\n", light->fields.iradius);
     printf("    }\n");
     printf("}\n");
 }

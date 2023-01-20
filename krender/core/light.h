@@ -13,7 +13,6 @@ struct LightInfo_s {
     PN_float32 color[3];  // vec3
     // written by RPPointLight
     PN_float32 radius;
-    PN_float32 iradius;
 };
 
 union LightInfo {
@@ -28,6 +27,7 @@ struct LightPacket_s {
     PN_float32 type;
     PN_float32 ies;
     LightInfo info;
+    PN_float32 iradius;
 };
 
 union LightPacket {
