@@ -31,8 +31,11 @@ class TagStateManager;
 #define MAX_UPDATES 32
 
 
-class LightingPipeline: public TypedWritableReferenceCount {
+class EXPORT_CLASS LightingPipeline: public TypedWritableReferenceCount {
 PUBLISHED:
+    LightingPipeline(
+        GraphicsWindow* window, NodePath camera,
+        bool has_srgb=false, bool has_pcf=false, unsigned int shadow_size=512);
     NodePath get_scene();
     void update();
     int get_num_commands();
@@ -43,13 +46,12 @@ PUBLISHED:
     void invalidate_shadows();
     void prepare_scene();
 
-public:
-    LightingPipeline(GraphicsWindow* window, NodePath camera, unsigned int shadow_size=512);
-
 protected:
     GraphicsWindow* _win;
     NodePath _camera;
     Filename _path;
+    bool _has_srgb;
+    bool _has_pcf;
 
 private:
     NodePath _scene;

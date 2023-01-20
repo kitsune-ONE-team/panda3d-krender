@@ -1,5 +1,7 @@
 set(SHADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/base.inc.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/base.inc.frag.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/bloom.frag.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/bloom.vert.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/default.frag.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/default.vert.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/defines.inc.glsl

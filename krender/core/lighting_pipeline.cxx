@@ -6,6 +6,8 @@
 #include "renderState.h"
 #include "spotlight.h"
 #include "texture.h"
+#include "virtualFileMountRamdisk.h"
+#include "virtualFileSystem.h"
 
 #include "krender/core/lighting_pipeline.h"
 #include "krender/core/helpers.h"
@@ -24,13 +26,30 @@ class RPSpotLight;
 
 TypeHandle LightingPipeline::_type_handle;
 
-LightingPipeline::LightingPipeline(GraphicsWindow* window, NodePath camera, unsigned int shadow_size) {
+LightingPipeline::LightingPipeline(
+        GraphicsWindow* window, NodePath camera,
+        bool has_srgb, bool has_pcf, unsigned int shadow_size) {
     _win = window;
     _camera = camera;
+    _has_srgb = has_srgb;
+    _has_pcf = has_pcf;
     _shadow_size = shadow_size;
 
+    VirtualFileSystem* vfs = VirtualFileSystem::get_global_ptr();
+    VirtualFileMountRamdisk* ramdisk = new VirtualFileMountRamdisk();
+    vfs->mount(ramdisk, ".krender", 0);
+
+    char* config = (char*) malloc(4096 * sizeof(char));
+    sprintf(config, "#define SUPPORTS_SHADOW_FILTER %d\n",
+            (_win->get_gsg()->get_supports_shadow_filter() && _has_pcf) ? 1 : 0);
+    sprintf(config, "#define SRGB_COLOR %d\n",
+            (_win->get_fb_properties().get_srgb_color() && _has_srgb) ? 1 : 0);
+    vfs->write_file(".krender/config.inc.glsl", config, false);
+    vfs->write_file(".krender_config.inc.glsl", config, false);
+    // printf("%s\n", vfs->read_file(".krender/config.inc.glsl", false).c_str());
+    free(config);
+
     _scene = NodePath(new PandaNode("Scene"));
-    _scene.set_shader_input(ShaderInput("render_mode", 1));
 
     _create_shadowmap(false);
     _create_shadow_manager();
@@ -84,10 +103,10 @@ void LightingPipeline::_create_shadowmap(bool depth2color) {
 
     // create shadowmap atlas texture
     _shadowmap_tex = new Texture("Shadowmap");
-    // if (_win->get_gsg()->get_supports_shadow_filter()) {
-    //     _shadowmap_tex->set_minfilter(SamplerState::FT_shadow);
-    //     _shadowmap_tex->set_magfilter(SamplerState::FT_shadow);
-    // }
+    if (_win->get_gsg()->get_supports_shadow_filter() && _has_pcf) {
+        _shadowmap_tex->set_minfilter(SamplerState::FT_shadow);
+        _shadowmap_tex->set_magfilter(SamplerState::FT_shadow);
+    }
     _shadowmap_fbo->add_render_texture(
         _shadowmap_tex, GraphicsOutput::RTM_bind_or_copy,
         depth2color ? GraphicsOutput::RTP_color : GraphicsOutput::RTP_depth);
@@ -127,7 +146,7 @@ void LightingPipeline::_create_shadow_manager() {
         NodePath camera = region->get_camera();
         if (!camera.is_empty()) {
             ((Camera*) camera.node())->set_initial_state(state);
-            // camera.node().set_camera_mask(CAMERA_MASK_SHADOW);
+            ((Camera*) camera.node())->set_camera_mask(1 << 1);
         }
     }
 }

@@ -17,18 +17,17 @@ PUBLISHED:
     RenderPipeline(
             GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
             unsigned int shadow_size=512,
-            bool has_srgb=false, bool has_alpha=false): LightingPipeline(window, camera, shadow_size) {
+            bool has_srgb=false, bool has_pcf=false, bool has_alpha=false):
+    LightingPipeline(window, camera, has_srgb, has_pcf, shadow_size) {
         _camera2d = camera2d;
         _render2d = render2d;
-        _has_srgb = has_srgb;
         _has_alpha = has_alpha;
     };
-    void add_render_pass(char* name, Shader* shader=NULL);
+    void add_render_pass(char* name, Shader* shader=nullptr);
 
 private:
     NodePath _camera2d;
     NodePath _render2d;
-    bool _has_srgb;
     bool _has_alpha;
 
     int _index;

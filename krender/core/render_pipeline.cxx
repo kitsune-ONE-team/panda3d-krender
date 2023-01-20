@@ -35,7 +35,8 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
             Texture* t = _passes.back()->get_texture(i);
             prev_plane.set_shader_input(ShaderInput(t->get_name(), t));
         }
-        prev_plane.set_shader(shader, 100);
+        if (shader != nullptr)
+            prev_plane.set_shader(shader, 100);
 
         // setup projection camera which captures plane from previous render pass
         // and renders into FBO
