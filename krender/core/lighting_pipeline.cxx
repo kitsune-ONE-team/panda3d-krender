@@ -66,8 +66,7 @@ void LightingPipeline::_create_shadowmap(bool depth2color) {
 
     // create FBO
     _shadowmap_fbo = _win->make_texture_buffer(
-        "lighting_pipeline", _atlas_size, _atlas_size,
-        nullptr, false, fbp);
+        "lighting_pipeline", _atlas_size, _atlas_size, nullptr, false, fbp);
     _shadowmap_fbo->clear_render_textures();
     _shadowmap_fbo->disable_clears();
     _shadowmap_fbo->get_overlay_display_region()->disable_clears();
@@ -292,10 +291,30 @@ int LightingPipeline::get_num_updates() {
 
 void LightingPipeline::add_light(PT(RPLight) light) {
     _light_manager->add_light(light);
+    _lights.push_back(light);
 }
 
 void LightingPipeline::remove_light(PT(RPLight) light) {
-    _light_manager->remove_light(light);
+    for (int i = 0; i < _lights.size(); i++) {
+        if (_lights.at(i) == light) {
+            _light_manager->remove_light(light);
+            _lights.erase(_lights.begin() + i);
+            break;
+        }
+    }
+}
+
+void LightingPipeline::remove_lights() {
+    for (int i = 0; i < _lights.size(); i++) {
+        _light_manager->remove_light(_lights.at(i));
+    }
+    _lights.clear();
+}
+
+void LightingPipeline::invalidate_shadows() {
+    for (int i = 0; i < _lights.size(); i++) {
+        _lights.at(i)->invalidate_shadows();
+    }
 }
 
 void LightingPipeline::prepare_scene() {

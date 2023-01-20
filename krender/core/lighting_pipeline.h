@@ -39,6 +39,8 @@ PUBLISHED:
     int get_num_updates();
     void add_light(PT(RPLight) light);
     void remove_light(PT(RPLight) light);
+    void remove_lights();
+    void invalidate_shadows();
     void prepare_scene();
 
 public:
@@ -66,6 +68,7 @@ private:
     Texture* _light_data_tex;
 
     short _atlas_size;
+    std::vector<PT(RPLight)> _lights;
     static TypeHandle _type_handle;
 
     void _create_shadowmap(bool depth2color);
