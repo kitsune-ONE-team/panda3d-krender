@@ -1,6 +1,13 @@
+#pragma include ".krender_config.inc.glsl"
 #pragma include "krender/shader/defines.inc.glsl"
 
-#define SUPPORTS_SHADOW_FILTER 0
+// custom inputs
+uniform samplerBuffer light_data;
+#if (SUPPORTS_SHADOW_FILTER == 1)
+    uniform sampler2DShadow shadowmap;
+#else
+    uniform sampler2D shadowmap;
+#endif
 
 
 vec3 decode_normal(vec3 color) {
@@ -55,10 +62,14 @@ float srgb(float x) {
     /*
       Linear RGB to sRGB, single channel.
     */
+#if (SRGB_COLOR == 1)
+    return x;
+#else
     return (
         (x <= 0.0031308) ?
         12.92 * x :
         ((1.0 + 0.055) * pow(x, 1.0 / 2.4) - 0.055));
+#endif
 }
 
 vec3 lrgb3(vec3 srgb_color) {
@@ -122,8 +133,11 @@ float process_shadow(int ss0_slot, vec3 light_vec, float light_dist) {
 
     vec2 texel_size = 1.0 / textureSize(shadowmap, 0);
 
-    // float bias = 0.0001 * light_dist;
+#if (SUPPORTS_SHADOW_FILTER == 1)
     float bias = 0.01;
+#else
+    float bias = 0.01;
+#endif
 
     float light_shadow = 0.0;
     for(int x = -1; x <= 1; ++x) {
@@ -132,8 +146,6 @@ float process_shadow(int ss0_slot, vec3 light_vec, float light_dist) {
 
             // get closest depth value from light's perspective (using 0...1 range)
 #if (SUPPORTS_SHADOW_FILTER == 1)
-            // float depth = textureProj(shadowmap, tile_uv);
-            // float depth = texture(shadowmap, tile_uv.xyz).x;
             float ray_length = texture(shadowmap, tile_uv.xyz + vec3(off_uv, 0));
 #else
             float ray_length = texture(shadowmap, tile_uv.xy + off_uv).x;
@@ -145,8 +157,6 @@ float process_shadow(int ss0_slot, vec3 light_vec, float light_dist) {
 
             // add shadow, greater - darker
             // will be inverted for multiplication later
-            // light_shadow += (depth - bias) * 10 + 0.3;
-            // light_shadow += (depth - bias) > 0 ? 1.0 : 0.0;
             light_shadow += (depth > bias) ? 1.0 : 0.0;
 
         }
