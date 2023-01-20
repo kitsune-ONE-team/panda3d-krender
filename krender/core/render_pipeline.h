@@ -24,6 +24,7 @@ PUBLISHED:
         _has_alpha = has_alpha;
     };
     void add_render_pass(char* name, Shader* shader=nullptr);
+    void reload_shaders();
 
 private:
     NodePath _camera2d;

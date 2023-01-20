@@ -53,6 +53,8 @@ protected:
     bool _has_srgb;
     bool _has_pcf;
 
+    void _configure();
+
 private:
     NodePath _scene;
     unsigned int _shadow_size;

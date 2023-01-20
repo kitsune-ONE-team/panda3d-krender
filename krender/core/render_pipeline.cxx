@@ -11,10 +11,10 @@ TypeHandle RenderPipeline::_type_handle;
 
 void RenderPipeline::add_render_pass(char* name, Shader* shader) {
     RenderPass* pass;
+    unsigned int num_passes = _passes.size();
 
-    if (_passes.size() == 0) {  // initial render pass
-        pass = new RenderPass(
-            name, (unsigned int) _passes.size(), _win, _camera, _has_srgb, _has_alpha);
+    if (num_passes == 0) {  // initial render pass
+        pass = new RenderPass(name, num_passes, _win, _camera, _has_srgb, _has_alpha);
 
         // setup camera which which captures scene
         // and renders into FBO using default camera lens
@@ -23,12 +23,11 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
         ((Camera*) cam.node())->set_camera_mask(1 << 0);
 
     } else {  // other render passes
-        pass = new RenderPass(
-            name, (unsigned int) _passes.size(), _win, _camera2d, _has_srgb, _has_alpha);
+        pass = new RenderPass(name, num_passes, _win, _camera2d, _has_srgb, _has_alpha);
 
         // setup plane from previous render pass
-        NodePath prev_plane = _passes.back()->get_fbo()->get_texture_card();
-        prev_plane.detach_node();  // detach previous plane from screen
+        NodePath prev_plane = _passes.back()->get_card();
+        // prev_plane.detach_node();  // detach previous plane from screen
 
         // pass textures from previous render pass in the current render pass
         for (unsigned int i = 0; i < _passes.back()->get_num_textures(); i++) {
@@ -45,8 +44,15 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
     }
 
     // show current plane on screen
-    NodePath plane = pass->get_fbo()->get_texture_card();
+    NodePath plane = pass->get_card();
     plane.reparent_to(_render2d);
 
     _passes.push_back(pass);
+}
+
+void RenderPipeline::reload_shaders() {
+    _configure();
+    for (int i = 0; i < _passes.size(); i++) {
+        _passes.at(i)->reload_shader();
+    }
 }

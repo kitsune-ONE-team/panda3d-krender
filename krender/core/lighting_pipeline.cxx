@@ -38,16 +38,7 @@ LightingPipeline::LightingPipeline(
     VirtualFileSystem* vfs = VirtualFileSystem::get_global_ptr();
     VirtualFileMountRamdisk* ramdisk = new VirtualFileMountRamdisk();
     vfs->mount(ramdisk, ".krender", 0);
-
-    char* config = (char*) malloc(4096 * sizeof(char));
-    sprintf(config, "#define SUPPORTS_SHADOW_FILTER %d\n",
-            (_win->get_gsg()->get_supports_shadow_filter() && _has_pcf) ? 1 : 0);
-    sprintf(config, "#define SRGB_COLOR %d\n",
-            (_win->get_fb_properties().get_srgb_color() && _has_srgb) ? 1 : 0);
-    vfs->write_file(".krender/config.inc.glsl", config, false);
-    vfs->write_file(".krender_config.inc.glsl", config, false);
-    // printf("%s\n", vfs->read_file(".krender/config.inc.glsl", false).c_str());
-    free(config);
+    _configure();
 
     _scene = NodePath(new PandaNode("Scene"));
 
@@ -56,6 +47,22 @@ LightingPipeline::LightingPipeline(
     _create_queue();
     _create_light_manager();
     _update_shader_inputs();
+}
+
+void LightingPipeline::_configure() {
+
+    char* config = (char*) malloc(4096 * sizeof(char));
+    sprintf(config, "#define SUPPORTS_SHADOW_FILTER %d\n",
+            (_win->get_gsg()->get_supports_shadow_filter() && _has_pcf) ? 1 : 0);
+    sprintf(config, "#define SRGB_COLOR %d\n",
+            (_win->get_fb_properties().get_srgb_color() && _has_srgb) ? 1 : 0);
+
+    VirtualFileSystem* vfs = VirtualFileSystem::get_global_ptr();
+    vfs->write_file(".krender_config.inc.glsl", config, false);
+    // vfs->write_file(".krender/config.inc.glsl", config, false);
+    // printf("%s\n", vfs->read_file(".krender/config.inc.glsl", false).c_str());
+
+    free(config);
 }
 
 // LightingPipeline::~LightingPipeline() {

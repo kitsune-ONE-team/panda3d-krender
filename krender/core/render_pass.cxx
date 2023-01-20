@@ -32,12 +32,12 @@ RenderPass::RenderPass(char* name, unsigned int index, GraphicsWindow* win, Node
     }
 }
 
-GraphicsOutput* RenderPass::get_fbo() {
-    return _fbo;
-}
-
 NodePath RenderPass::get_camera() {
     return _cam;
+}
+
+NodePath RenderPass::get_card() {
+    return _card;
 }
 
 Texture* RenderPass::get_texture(unsigned int i) {
@@ -48,11 +48,18 @@ unsigned int RenderPass::get_num_textures() {
     return _tex.size();
 }
 
-GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool has_alpha) {
-    WindowProperties props = win->get_properties();
-    int w = props.get_x_size();
-    int h = props.get_y_size();
+void RenderPass::reload_shader() {
+    const Shader* shaderc = _card.get_shader();
+    if (shaderc != nullptr) {
+        Filename vert = shaderc->get_filename(Shader::ST_vertex).get_fullpath();
+        Filename frag = shaderc->get_filename(Shader::ST_fragment).get_fullpath();
+        Shader* shader = Shader::load(Shader::SL_GLSL, vert, frag);
+        _card.clear_shader();
+        _card.set_shader(shader, 100);
+    }
+}
 
+GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool has_alpha) {
     FrameBufferProperties* fbp = new FrameBufferProperties();
     fbp->set_rgba_bits(1, 1, 1, 1);
     if (_index == 0) {  // initial render pass
@@ -62,13 +69,15 @@ GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool h
             fbp->set_srgb_color(true);
     }
 
-    GraphicsOutput* fbo = win->make_texture_buffer(_name, w, h, nullptr, false, fbp);
+    GraphicsOutput* fbo = win->make_texture_buffer(_name, 0, 0, nullptr, false, fbp);
     fbo->clear_render_textures();
     fbo->set_sort(_index - 10);
     if (has_alpha)
         fbo->set_clear_color(LVecBase4(0, 0, 0, 0));
     else
         fbo->set_clear_color(LVecBase4(0, 0, 0, 1));
+
+    _card = fbo->get_texture_card();
 
     return fbo;
 }
