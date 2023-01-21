@@ -1,4 +1,5 @@
 *.pyc
 *.so
 *.whl
+.krender_config.inc.glsl
 __pycache__
