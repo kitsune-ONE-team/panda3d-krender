@@ -2,7 +2,7 @@
 // version 130, so we can drop gl_FragColor
 // https://docs.panda3d.org/1.10/python/programming/shaders/list-of-glsl-inputs
 
-#define DEPTH2COLOR 0
+#pragma include ".krender_config.inc.glsl"
 
 // fragment shader input
 #if (DEPTH2COLOR == 1)
