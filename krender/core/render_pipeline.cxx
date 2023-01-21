@@ -23,19 +23,33 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
         ((Camera*) cam.node())->set_camera_mask(1 << 0);
 
     } else {  // other render passes
-        pass = new RenderPass(name, num_passes, _win, _camera2d, _has_srgb, _has_alpha);
+        // get plane from previous render pass
+        NodePath prev_plane = _passes.back()->get_result_card();
 
-        // setup plane from previous render pass
-        NodePath prev_plane = _passes.back()->get_card();
-        // prev_plane.detach_node();  // detach previous plane from screen
+        // detach previous plane from screen
+        if (!_passes.back()->get_source_card().is_empty())
+            prev_plane.detach_node();
 
-        // pass textures from previous render pass in the current render pass
+        pass = new RenderPass(name, num_passes, _win, _camera2d, _has_srgb, _has_alpha, prev_plane);
+
+        // pass textures from the first render pass to the current render pass
+        for (unsigned int i = 0; i < _passes.front()->get_num_textures(); i++) {
+            Texture* t = _passes.front()->get_texture(i);
+            char* s = (char*) malloc((strlen(_passes.front()->get_name()) + strlen(t->get_name().c_str()) + 1) * sizeof(char));
+            sprintf(s, "%s_%s", _passes.front()->get_name(), t->get_name().c_str());
+            pass->get_source_card().set_shader_input(ShaderInput(std::string(s), t));
+        }
+
+        // pass textures from the previous render pass to the current render pass
         for (unsigned int i = 0; i < _passes.back()->get_num_textures(); i++) {
             Texture* t = _passes.back()->get_texture(i);
-            prev_plane.set_shader_input(ShaderInput(t->get_name(), t));
+            char* s = (char*) malloc((strlen("prev") + strlen(t->get_name().c_str()) + 1) * sizeof(char));
+            sprintf(s, "prev_%s", t->get_name().c_str());
+            pass->get_source_card().set_shader_input(ShaderInput(std::string(s), t));
         }
+
         if (shader != nullptr)
-            prev_plane.set_shader(shader, 100);
+            pass->get_source_card().set_shader(shader, 100);
 
         // setup projection camera which captures plane from previous render pass
         // and renders into FBO
@@ -44,15 +58,29 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
     }
 
     // show current plane on screen
-    NodePath plane = pass->get_card();
+    NodePath plane = pass->get_result_card();
     plane.reparent_to(_render2d);
 
     _passes.push_back(pass);
 }
 
-void RenderPipeline::reload_shaders() {
-    _configure();
-    for (int i = 0; i < _passes.size(); i++) {
-        _passes.at(i)->reload_shader();
+NodePath RenderPipeline::get_source_card(char* name) {
+    for (unsigned int i = 0; i < _passes.size(); i++) {
+        if (strcmp(_passes.at(i)->get_name(), name) == 0) {
+            return _passes.at(i)->get_source_card();
+        }
     }
+    return NodePath::not_found();
+}
+
+void RenderPipeline::update() {
+    if (_win_w != _win->get_x_size() || _win_h != _win->get_y_size()) {
+        _win_w = _win->get_x_size();
+        _win_h = _win->get_y_size();
+        _configure();
+        for (int i = 0; i < _passes.size(); i++) {
+            _passes.at(i)->reload_shader();
+        }
+    }
+    LightingPipeline::update();
 }

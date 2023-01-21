@@ -22,14 +22,19 @@ PUBLISHED:
         _camera2d = camera2d;
         _render2d = render2d;
         _has_alpha = has_alpha;
+        _win_w = window->get_x_size();
+        _win_h = window->get_y_size();
     };
     void add_render_pass(char* name, Shader* shader=nullptr);
-    void reload_shaders();
+    NodePath get_source_card(char* name);
+    void update();
 
 private:
     NodePath _camera2d;
     NodePath _render2d;
     bool _has_alpha;
+    unsigned int _win_w;
+    unsigned int _win_h;
 
     int _index;
     std::vector<RenderPass*> _passes;

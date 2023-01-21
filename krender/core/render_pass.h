@@ -12,9 +12,11 @@
 class RenderPass {
 public:
     RenderPass(char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
-               bool has_srgb=false, bool has_alpha=false);
+               bool has_srgb=false, bool has_alpha=false, NodePath card=NodePath::not_found());
+    char* get_name();
     NodePath get_camera();
-    NodePath get_card();
+    NodePath get_source_card();
+    NodePath get_result_card();
     Texture* get_texture(unsigned int i);
     unsigned int get_num_textures();
     void reload_shader();
@@ -25,7 +27,8 @@ private:
     GraphicsOutput* _fbo;
     std::vector<Texture*> _tex;
     NodePath _cam;
-    NodePath _card;
+    NodePath _source_card;
+    NodePath _result_card;
 
     GraphicsOutput* _make_fbo(GraphicsWindow* win, bool has_srgb=false, bool has_alpha=false);
     void _make_textures();

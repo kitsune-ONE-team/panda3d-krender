@@ -5,6 +5,8 @@ set(SHADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/default.frag.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/default.vert.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/defines.inc.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/dof.frag.glsl
+  ${CMAKE_CURRENT_SOURCE_DIR}/dof.vert.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/shadow.frag.glsl
   ${CMAKE_CURRENT_SOURCE_DIR}/shadow.vert.glsl
 )
