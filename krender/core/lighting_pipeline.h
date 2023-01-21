@@ -75,7 +75,7 @@ private:
     std::vector<PT(RPLight)> _lights;
     static TypeHandle _type_handle;
 
-    void _create_shadowmap(bool depth2color);
+    void _create_shadowmap();
     void _create_shadow_manager();
     void _create_queue();
     void _create_light_manager();

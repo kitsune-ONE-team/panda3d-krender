@@ -22,6 +22,8 @@ class RPSpotLight;
 #endif
 
 // #define LP_DEBUG 1
+#define DEPTH2COLOR 0
+// #define DEPTH2COLOR 1
 
 
 TypeHandle LightingPipeline::_type_handle;
@@ -42,7 +44,7 @@ LightingPipeline::LightingPipeline(
 
     _scene = NodePath(new PandaNode("Scene"));
 
-    _create_shadowmap(false);
+    _create_shadowmap();
     _create_shadow_manager();
     _create_queue();
     _create_light_manager();
@@ -50,12 +52,24 @@ LightingPipeline::LightingPipeline(
 }
 
 void LightingPipeline::_configure() {
-
     char* config = (char*) malloc(4096 * sizeof(char));
-    sprintf(config, "#define SUPPORTS_SHADOW_FILTER %d\n",
-            (_win->get_gsg()->get_supports_shadow_filter() && _has_pcf) ? 1 : 0);
-    sprintf(config, "#define SRGB_COLOR %d\n",
-            (_win->get_fb_properties().get_srgb_color() && _has_srgb) ? 1 : 0);
+
+    sprintf(
+        config, "\
+#define DEPTH2COLOR %d\n\
+#define SUPPORTS_SHADOW_FILTER %d\n\
+#define SRGB_COLOR %d\n\
+#define CAM_NEAR %f\n\
+#define CAM_FAR %f\n\
+#define WIN_X_SIZE %d\n\
+#define WIN_Y_SIZE %d\n",
+        DEPTH2COLOR,
+        (_win->get_gsg()->get_supports_shadow_filter() && _has_pcf) ? 1 : 0,
+        (_win->get_fb_properties().get_srgb_color() && _has_srgb) ? 1 : 0,
+        ((Camera*) _camera.node())->get_lens()->get_near(),
+        ((Camera*) _camera.node())->get_lens()->get_far(),
+        _win->get_x_size(),
+        _win->get_y_size());
 
     VirtualFileSystem* vfs = VirtualFileSystem::get_global_ptr();
     vfs->write_file(".krender_config.inc.glsl", config, false);
@@ -69,7 +83,7 @@ void LightingPipeline::_configure() {
 //     free(_light_data);
 // }
 
-void LightingPipeline::_create_shadowmap(bool depth2color) {
+void LightingPipeline::_create_shadowmap() {
     _atlas_size = 256;
 
     // each point light containts 6 shadow sources (+X, -X, +Y, -Y, +Z, -Z)
@@ -81,7 +95,7 @@ void LightingPipeline::_create_shadowmap(bool depth2color) {
         _atlas_size *= 2;  // double atlas size
 
     FrameBufferProperties* fbp = new FrameBufferProperties();
-    if (depth2color) {
+    if (DEPTH2COLOR) {
         fbp->set_float_color(true);
         fbp->set_rgba_bits(32, 32, 32, 8);
         fbp->set_srgb_color(false);
@@ -116,7 +130,7 @@ void LightingPipeline::_create_shadowmap(bool depth2color) {
     }
     _shadowmap_fbo->add_render_texture(
         _shadowmap_tex, GraphicsOutput::RTM_bind_or_copy,
-        depth2color ? GraphicsOutput::RTP_color : GraphicsOutput::RTP_depth);
+        DEPTH2COLOR ? GraphicsOutput::RTP_color : GraphicsOutput::RTP_depth);
 }
 
 void LightingPipeline::_create_shadow_manager() {
@@ -257,13 +271,7 @@ void LightingPipeline::_update_shader_inputs() {
 
 void LightingPipeline::update() {
     LPoint3 cam_pos = _camera.get_pos(_scene);
-    // printf("%f %f %f\n", cam_pos.get_x(), cam_pos.get_y(), cam_pos.get_z());
-
-    // if (_is_enabled)
-    if (1)
-        _light_manager->set_camera_pos(cam_pos);
-    else
-        _light_manager->set_camera_pos(LPoint3(0, 0, 0));
+    _light_manager->set_camera_pos(cam_pos);
 
     _light_manager->update();
     _shadow_manager->update();
