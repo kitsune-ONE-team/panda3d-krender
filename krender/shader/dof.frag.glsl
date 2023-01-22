@@ -10,10 +10,10 @@ uniform sampler2D base_depth;
 uniform sampler2D prev_color;
 
 // custom inputs
-uniform float dof_focus_min;
-uniform float dof_focus_max;
-uniform float dof_blur_min;
-uniform float dof_blur_max;
+uniform float dof_focus_near;
+uniform float dof_focus_far;
+uniform float dof_blur_near;
+uniform float dof_blur_far;
 
 // custom inputs from vertex shader outputs
 in vec2 vert_uv;
@@ -37,12 +37,12 @@ void main() {
     float depth = texture(base_depth, vert_uv).x;
     float z = get_z_from_depth(depth);
 
-    float dof_focus = dof_focus_max - dof_focus_min;
-    float dof_focus_mid = dof_focus_min + dof_focus / 2.0;
+    float dof_focus = dof_focus_far - dof_focus_near;
+    float dof_focus_mid = dof_focus_near + dof_focus / 2.0;
     float value = (
         z > dof_focus_mid ?
-        smoothstep(dof_focus_max, dof_blur_max, z) :
-        (1.0 - smoothstep(dof_blur_min, dof_focus_min, z)));
+        smoothstep(dof_focus_far, dof_blur_far, z) :
+        (1.0 - smoothstep(dof_blur_near, dof_focus_near, z)));
 
     vec3 focus = texture(prev_color, vert_uv).rgb;
     vec3 blur = process_blur(prev_color, vert_uv);
