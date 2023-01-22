@@ -40,6 +40,8 @@ class Sample(ShowBase):
             self.win, self.render2d, self.cam, self.cam2d,
             has_srgb=has_srgb, has_alpha=False, has_pcf=True, shadow_size=512)
         self._render_pipeline.add_render_pass('base')
+
+        # add depth of field render pass
         self._render_pipeline.add_render_pass('dof')
         dof_card = self._render_pipeline.get_source_card('dof')
         dof_card.set_shader_input('dof_focus_near', 15.0)
@@ -51,6 +53,7 @@ class Sample(ShowBase):
             'krender/shader/dof.vert.glsl',
             'krender/shader/dof.frag.glsl'), 100)
 
+        # add bloom render pass
         self._render_pipeline.add_render_pass('bloom', Shader.load(
             Shader.SL_GLSL,
             'krender/shader/bloom.vert.glsl',
@@ -71,11 +74,12 @@ class Sample(ShowBase):
         room.reparent_to(scene)
         room.set_scale(0.5)
 
+        # load monkey and make it emissive
         monkey = self.loader.load_model('monkey.egg.pz')
         monkey.set_scale(0.5)
         monkey.set_pos(-2.5, -4, 2)
         monkey.reparent_to(scene)
-        monkey.hide(1 << 1)  # hide from shadowmapper's cameras, so it don't drops shadows
+        monkey.hide(1 << 1)  # hide from shadowmapper's cameras, so it doesn't drop shadows
         material = Material()
         material.set_base_color(LColor(0, 1, 0, 0))
         material.set_emission(LColor(0, 1, 0, 0))
