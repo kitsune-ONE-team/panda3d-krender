@@ -26,10 +26,6 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
         // get plane from previous render pass
         NodePath prev_plane = _passes.back()->get_result_card();
 
-        // detach previous plane from screen
-        if (!_passes.back()->get_source_card().is_empty())
-            prev_plane.detach_node();
-
         pass = new RenderPass(name, num_passes, _win, _camera2d, _has_srgb, _has_alpha, prev_plane);
 
         // pass textures from the first render pass to the current render pass
