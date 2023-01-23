@@ -9,6 +9,12 @@ KITSUNETSUKI project: https://k.kitsune.one/
 Conda package: https://anaconda.org/kitsune.ONE/panda3d-krender
 
 
+Features
+--------
+
+* rplight compatible lighting and shadowmapping system
+
+
 Building requirements
 ---------------------
 
