@@ -27,7 +27,7 @@ class kphys_build_ext(build_ext):
 if __name__ == "__main__":
     setuptools.setup(
         name='panda3d-krender',
-        version='0.0.6',
+        version='0.0.7',
         description='Deferred Render Pipeline for Panda3D',
         long_description=(
             'Deferred Render Pipeline for Panda3D '
@@ -38,7 +38,9 @@ if __name__ == "__main__":
         license='MIT',
         packages=[
             'krender',
+            'krender.shader',
         ],
+        package_data={'krender.shader': ['*.glsl']},
         install_requires=['panda3d'],
         ext_modules=[
             setuptools.Extension('krender.core', sources=[]),
