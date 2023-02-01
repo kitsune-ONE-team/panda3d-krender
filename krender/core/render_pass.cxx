@@ -101,6 +101,8 @@ void RenderPass::_make_textures() {
     Texture* t;
 
     t = new Texture("color");
+    t->set_wrap_u(SamplerState::WM_clamp);
+    t->set_wrap_v(SamplerState::WM_clamp);
     _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_color);
     _tex.push_back(t);
 
@@ -108,10 +110,14 @@ void RenderPass::_make_textures() {
         return;
 
     t = new Texture("depth");
+    t->set_wrap_u(SamplerState::WM_clamp);
+    t->set_wrap_v(SamplerState::WM_clamp);
     _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_depth);
     _tex.push_back(t);
 
     t = new Texture("emissive");
+    t->set_wrap_u(SamplerState::WM_clamp);
+    t->set_wrap_v(SamplerState::WM_clamp);
     _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_aux_rgba_0);
     _tex.push_back(t);
 }

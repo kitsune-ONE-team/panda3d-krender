@@ -67,7 +67,7 @@ class Sample(ShowBase):
             'krender/shader/default.frag.glsl'), 100)
 
         # move camera
-        self.cam.set_pos(-2, -20, 2)
+        self.cam.set_pos(-2.5, -20, 1.5)
 
         # load environment
         room = self.loader.load_model('room_industrial.egg.pz')
@@ -99,7 +99,7 @@ class Sample(ShowBase):
         # add light
         light = NodePath(PointLight('Point'))
         light.node().set_color(LColor(1, 0.4, 0.4, 3))
-        light.node().show_frustum()
+        # light.node().show_frustum()
         light.node().set_shadow_caster(True)
         light.node().set_max_distance(10)
         light.set_pos(0, -6, 2)
@@ -108,7 +108,7 @@ class Sample(ShowBase):
         # add another light
         light = NodePath(PointLight('Point.001'))
         light.node().set_color(LColor(0.4, 0.4, 1, 3))
-        light.node().show_frustum()
+        # light.node().show_frustum()
         light.node().set_shadow_caster(True)
         light.node().set_max_distance(10)
         light.set_pos(-5, -6, 2)
