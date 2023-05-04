@@ -4,6 +4,7 @@
 #include "texture.h"
 #include "windowProperties.h"
 
+#include "krender/core/helpers.h"
 #include "krender/core/render_pipeline.h"
 
 
@@ -20,7 +21,7 @@ void RenderPipeline::add_render_pass(char* name, Shader* shader) {
         // and renders into FBO using default camera lens
         NodePath cam = pass->get_camera();
         ((Camera*) cam.node())->set_scene(get_scene());
-        ((Camera*) cam.node())->set_camera_mask(1 << 0);
+        ((Camera*) cam.node())->set_camera_mask(CAMERA_MASK_DEFERRED);
 
     } else {  // other render passes
         // get plane from previous render pass

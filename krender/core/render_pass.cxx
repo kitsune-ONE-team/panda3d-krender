@@ -91,7 +91,11 @@ GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool h
     else
         fbo->set_clear_color(LVecBase4(0, 0, 0, 1));
 
+    char* card_name = (char*) malloc((strlen(_name) + strlen("_card")) * sizeof(char));
+    sprintf(card_name, "%s_card", _name);
+
     _result_card = fbo->get_texture_card();
+    _result_card.set_name(card_name);
 
     return fbo;
 }

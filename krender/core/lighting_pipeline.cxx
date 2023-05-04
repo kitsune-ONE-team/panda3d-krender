@@ -171,7 +171,7 @@ void LightingPipeline::_create_shadow_manager() {
         NodePath camera = region->get_camera();
         if (!camera.is_empty()) {
             ((Camera*) camera.node())->set_initial_state(state);
-            ((Camera*) camera.node())->set_camera_mask(1 << 1);
+            ((Camera*) camera.node())->set_camera_mask(CAMERA_MASK_SHADOW);
         }
     }
 }
