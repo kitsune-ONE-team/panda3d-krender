@@ -8,6 +8,7 @@
 #include "nodePath.h"
 #include "pandabase.h"
 #include "texture.h"
+#include "pvector.h"
 #include "typedWritableReferenceCount.h"
 
 #ifdef CPPPARSER  // interrogate
@@ -34,7 +35,7 @@ class TagStateManager;
 class EXPORT_CLASS LightingPipeline: public TypedWritableReferenceCount {
 PUBLISHED:
     LightingPipeline(
-        GraphicsWindow* window, NodePath camera,
+        PointerTo<GraphicsWindow> window, NodePath camera,
         bool has_srgb=false, bool has_pcf=false, unsigned int shadow_size=512);
     NodePath get_scene();
     void update();
@@ -47,7 +48,7 @@ PUBLISHED:
     void prepare_scene();
 
 protected:
-    GraphicsWindow* _win;
+    PointerTo<GraphicsWindow> _win;
     NodePath _camera;
     Filename _path;
     bool _has_srgb;
@@ -59,20 +60,20 @@ private:
     NodePath _scene;
     unsigned int _shadow_size;
 
-    GraphicsOutput* _shadowmap_fbo;
-    Texture* _shadowmap_tex;
+    PointerTo<GraphicsOutput> _shadowmap_fbo;
+    PointerTo<Texture> _shadowmap_tex;
 
     GPUCommandList* _gpu_command_list;
-    Texture* _gpu_command_data;
+    PointerTo<Texture> _gpu_command_data;
 
     TagStateManager* _tag_state_manager;
     ShadowManager* _shadow_manager;
     InternalLightManager* _light_manager;
     LightData* _light_data;
-    Texture* _light_data_tex;
+    PointerTo<Texture> _light_data_tex;
 
     short _atlas_size;
-    std::vector<PT(RPLight)> _lights;
+    pvector<PT(RPLight)> _lights;
     static TypeHandle _type_handle;
 
     void _create_shadowmap();

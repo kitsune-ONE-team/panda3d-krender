@@ -1,11 +1,10 @@
 #ifndef CORE_RENDER_PIPELINE_H
 #define CORE_RENDER_PIPELINE_H
 
-#include <vector>
-
 #include "graphicsWindow.h"
 #include "nodePath.h"
 #include "pandabase.h"
+#include "pvector.h"
 #include "typedWritableReferenceCount.h"
 
 #include "krender/core/render_pass.h"
@@ -37,7 +36,7 @@ private:
     unsigned int _win_h;
 
     int _index;
-    std::vector<RenderPass*> _passes;
+    pvector<RenderPass*> _passes;
     static TypeHandle _type_handle;
 
 public:

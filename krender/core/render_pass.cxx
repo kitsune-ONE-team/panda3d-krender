@@ -49,7 +49,7 @@ NodePath RenderPass::get_result_card() {
     return _result_card;
 }
 
-Texture* RenderPass::get_texture(unsigned int i) {
+PointerTo<Texture> RenderPass::get_texture(unsigned int i) {
     return _tex.at(i);
 }
 
@@ -73,7 +73,7 @@ void RenderPass::reload_shader() {
     _source_card.set_shader(shader, 100);
 }
 
-GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool has_alpha) {
+PointerTo<GraphicsOutput> RenderPass::_make_fbo(PointerTo<GraphicsWindow> win, bool has_srgb, bool has_alpha) {
     FrameBufferProperties* fbp = new FrameBufferProperties();
     fbp->set_rgba_bits(1, 1, 1, 1);
     if (_index == 0) {  // initial render pass
@@ -83,7 +83,7 @@ GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool h
             fbp->set_srgb_color(true);
     }
 
-    GraphicsOutput* fbo = win->make_texture_buffer(_name, 0, 0, nullptr, false, fbp);
+    PointerTo<GraphicsOutput> fbo = win->make_texture_buffer(_name, 0, 0, nullptr, false, fbp);
     fbo->clear_render_textures();
     fbo->set_sort(_index - 10);
     if (has_alpha)
@@ -102,7 +102,7 @@ GraphicsOutput* RenderPass::_make_fbo(GraphicsWindow* win, bool has_srgb, bool h
 
 void RenderPass::_make_textures() {
     char* tex_name;
-    Texture* t;
+    PointerTo<Texture> t;
 
     t = new Texture("color");
     t->set_wrap_u(SamplerState::WM_clamp);
@@ -129,7 +129,7 @@ void RenderPass::_make_textures() {
 /*
  * Makes a new 3D camera, ShowBase's makeCamera reimplementation.
  */
-NodePath RenderPass::_make_camera(GraphicsOutput* fbo, char* name, NodePath camera) {
+NodePath RenderPass::_make_camera(PointerTo<GraphicsOutput> fbo, char* name, NodePath camera) {
     NodePath cam = camera.attach_new_node(new Camera(name));
 
     ((Camera*) cam.node())->set_lens(((Camera*) camera.node())->get_lens());
@@ -144,7 +144,7 @@ NodePath RenderPass::_make_camera(GraphicsOutput* fbo, char* name, NodePath came
 /*
  * Makes a new 2D camera, ShowBase's makeCamera2d reimplementation.
  */
-NodePath RenderPass::_make_camera2d(GraphicsOutput* fbo, char* name, NodePath camera2d) {
+NodePath RenderPass::_make_camera2d(PointerTo<GraphicsOutput> fbo, char* name, NodePath camera2d) {
     NodePath cam = camera2d.attach_new_node(new Camera(name));
 
     const int left = -1;

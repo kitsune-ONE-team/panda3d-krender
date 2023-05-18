@@ -33,7 +33,7 @@ class RPSpotLight;
 TypeHandle LightingPipeline::_type_handle;
 
 LightingPipeline::LightingPipeline(
-        GraphicsWindow* window, NodePath camera,
+        PointerTo<GraphicsWindow> window, NodePath camera,
         bool has_srgb, bool has_pcf, unsigned int shadow_size) {
     _win = window;
     _camera = camera;
