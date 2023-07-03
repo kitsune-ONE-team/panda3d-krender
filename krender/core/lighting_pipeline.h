@@ -29,7 +29,9 @@ class TagStateManager;
 
 #define GPU_COMMAND_LIST_LIMIT 1024
 #define GPU_COMMAND_SIZE 32
-#define MAX_UPDATES 32
+#define MAX_UPDATES MAX_LIGHTS * 6
+#define CAMERA_BIT_SHADOW 2
+#define CAMERA_BIT_DEFERRED_FIRST 3
 
 
 class EXPORT_CLASS LightingPipeline: public TypedWritableReferenceCount {
@@ -44,6 +46,8 @@ PUBLISHED:
     void add_light(PT(RPLight) light);
     void remove_light(PT(RPLight) light);
     void remove_lights();
+    int get_num_lights();
+    void set_shadow_update_distance(unsigned int x);
     void invalidate_shadows();
     void prepare_scene();
 

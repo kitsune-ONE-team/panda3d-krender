@@ -127,7 +127,7 @@ void LightingPipeline::_create_shadowmap() {
     }
 
     // create shadowmap atlas texture
-    _shadowmap_tex = new Texture("Shadowmap");
+    _shadowmap_tex = new Texture("shadowmap");
     if (_win->get_gsg()->get_supports_shadow_filter() && _has_pcf) {
         _shadowmap_tex->set_minfilter(SamplerState::FT_shadow);
         _shadowmap_tex->set_magfilter(SamplerState::FT_shadow);
@@ -171,7 +171,7 @@ void LightingPipeline::_create_shadow_manager() {
         NodePath camera = region->get_camera();
         if (!camera.is_empty()) {
             ((Camera*) camera.node())->set_initial_state(state);
-            ((Camera*) camera.node())->set_camera_mask(CAMERA_MASK_SHADOW);
+            ((Camera*) camera.node())->set_camera_mask(1 << CAMERA_BIT_SHADOW);
         }
     }
 }
@@ -181,7 +181,7 @@ void LightingPipeline::_create_queue() {
     _gpu_command_list = new GPUCommandList();
 
     // GPU command data texture
-    _gpu_command_data = new Texture("GPU Command Data");
+    _gpu_command_data = new Texture("gpu_command_data");
     _gpu_command_data->setup_buffer_texture(
         GPU_COMMAND_SIZE * GPU_COMMAND_LIST_LIMIT,
         Texture::T_float,
@@ -196,7 +196,9 @@ void LightingPipeline::_create_light_manager() {
     _light_manager->set_shadow_manager(_shadow_manager);
 
     _light_data = (LightData*) malloc(sizeof(LightData));
-    _light_data_tex = new Texture("Light Data");
+    memset(_light_data->data, 0, sizeof(LightData));
+
+    _light_data_tex = new Texture("light_data");
     _light_data_tex->setup_buffer_texture(
         sizeof(_light_data->data),
         Texture::T_float,
@@ -269,8 +271,8 @@ NodePath LightingPipeline::get_scene() {
 }
 
 void LightingPipeline::_update_shader_inputs() {
-    _scene.set_shader_input(ShaderInput("shadowmap", _shadowmap_tex));
-    _scene.set_shader_input(ShaderInput("light_data", _light_data_tex));
+    _scene.set_shader_input(ShaderInput(_shadowmap_tex->get_name(), _shadowmap_tex));
+    _scene.set_shader_input(ShaderInput(_light_data_tex->get_name(), _light_data_tex));
 }
 
 void LightingPipeline::update() {
@@ -334,7 +336,7 @@ void LightingPipeline::add_light(PT(RPLight) light) {
 
 void LightingPipeline::remove_light(PT(RPLight) light) {
     for (int i = 0; i < _lights.size(); i++) {
-        if (_lights.at(i) == light) {
+        if (_lights[i] == light) {
             _light_manager->remove_light(light);
             _lights.erase(_lights.begin() + i);
             break;
@@ -344,14 +346,22 @@ void LightingPipeline::remove_light(PT(RPLight) light) {
 
 void LightingPipeline::remove_lights() {
     for (int i = 0; i < _lights.size(); i++) {
-        _light_manager->remove_light(_lights.at(i));
+        _light_manager->remove_light(_lights[i]);
     }
     _lights.clear();
 }
 
+int LightingPipeline::get_num_lights() {
+    return _lights.size();
+}
+
+void LightingPipeline::set_shadow_update_distance(unsigned int x) {
+    _light_manager->set_shadow_update_distance(x);
+}
+
 void LightingPipeline::invalidate_shadows() {
     for (int i = 0; i < _lights.size(); i++) {
-        _lights.at(i)->invalidate_shadows();
+        _lights[i]->invalidate_shadows();
     }
 }
 

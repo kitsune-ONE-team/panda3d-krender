@@ -24,7 +24,7 @@ PUBLISHED:
         _win_w = window->get_x_size();
         _win_h = window->get_y_size();
     };
-    void add_render_pass(char* name, Shader* shader=nullptr);
+    void add_render_pass(char* name, unsigned short type, Shader* shader=nullptr);
     NodePath get_source_card(char* name);
     void update();
 
@@ -36,7 +36,8 @@ private:
     unsigned int _win_h;
 
     int _index;
-    pvector<RenderPass*> _passes;
+    pvector<RenderPass*> _scene_passes;
+    pvector<RenderPass*> _post_passes;
     static TypeHandle _type_handle;
 
 public:
