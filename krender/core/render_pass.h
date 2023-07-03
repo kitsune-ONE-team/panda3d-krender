@@ -7,11 +7,20 @@
 #include "texture.h"
 #include "pvector.h"
 
+BEGIN_PUBLISH
+enum RenderPassType {
+    SCENE_PASS = 0,
+    POST_PASS = 1
+};
+END_PUBLISH
+
 
 class RenderPass {
 public:
-    RenderPass(char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
-               bool has_srgb=false, bool has_alpha=false, NodePath card=NodePath::not_found());
+    RenderPass(
+        char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
+        bool has_srgb=false, bool has_alpha=false,
+        NodePath card=NodePath::not_found());
     char* get_name();
     NodePath get_camera();
     NodePath get_source_card();
@@ -20,7 +29,7 @@ public:
     unsigned int get_num_textures();
     void reload_shader();
 
-private:
+protected:
     char* _name;
     unsigned int _index;
     PointerTo<GraphicsOutput> _fbo;
@@ -29,10 +38,10 @@ private:
     NodePath _source_card;
     NodePath _result_card;
 
-    PointerTo<GraphicsOutput> _make_fbo(PointerTo<GraphicsWindow> win, bool has_srgb=false, bool has_alpha=false);
+    PointerTo<GraphicsOutput> _make_fbo(
+        PointerTo<GraphicsWindow> win, bool has_srgb=false, bool has_alpha=false,
+        unsigned short num_textures=1, unsigned short sort=0);
     void _make_textures();
-    NodePath _make_camera(PointerTo<GraphicsOutput> fbo, char* name, NodePath camera);
-    NodePath _make_camera2d(PointerTo<GraphicsOutput> fbo, char* name, NodePath camera);
 };
 
 #endif
