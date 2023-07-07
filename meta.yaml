@@ -1,6 +1,6 @@
 package:
   name: panda3d-krender
-  version: "0.0.9"
+  version: "0.0.13"
 
 source:
   path: .
