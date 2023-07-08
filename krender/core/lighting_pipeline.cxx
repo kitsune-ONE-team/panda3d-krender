@@ -273,12 +273,11 @@ NodePath LightingPipeline::get_scene() {
 void LightingPipeline::_update_shader_inputs() {
     _scene.set_shader_input(ShaderInput(_shadowmap_tex->get_name(), _shadowmap_tex));
     _scene.set_shader_input(ShaderInput(_light_data_tex->get_name(), _light_data_tex));
+    _scene.set_shader_input(ShaderInput("camera_pos", _camera.get_pos(_scene)));
 }
 
 void LightingPipeline::update() {
-    LPoint3 cam_pos = _camera.get_pos(_scene);
-    _light_manager->set_camera_pos(cam_pos);
-
+    _light_manager->set_camera_pos(_camera.get_pos(_scene));
     _light_manager->update();
     _shadow_manager->update();
 
