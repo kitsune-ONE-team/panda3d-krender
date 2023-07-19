@@ -96,6 +96,8 @@ void RenderPass::_make_textures() {
     t->set_format(Texture::Format::F_srgb_alpha);
     t->set_wrap_u(SamplerState::WM_clamp);
     t->set_wrap_v(SamplerState::WM_clamp);
+    t->set_magfilter(SamplerState::FilterType::FT_linear);
+    t->set_minfilter(SamplerState::FilterType::FT_linear);
     _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_color);
     _tex.push_back(t);
 }

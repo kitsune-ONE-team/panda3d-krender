@@ -4,16 +4,38 @@
 #define SHADOW_BIAS 0.01
 #define SHADOW_BIAS_PCF 0.005
 
+#if (SUPPORTS_SHADOW_FILTER == 1)
+#define SHADOWMAP sampler2DShadow
+#else
+#define SHADOWMAP sampler2D
+#endif
 
-float lambert(vec3 n, vec3 l) {
+#ifndef LIGHT_MODEL
+#define LIGHT_MODEL lambert
+#endif
+
+#ifndef LIGHT_ATTENUATION
+#define LIGHT_ATTENUATION linear_attenuation
+#endif
+
+#ifndef SHADING_DATA
+#define SHADING_DATA ShadingData
+#endif
+
+struct ShadingData {
+    vec3 vert_pos;
+    vec3 normal;
+};
+
+float lambert(SHADING_DATA shading_data, vec3 l) {
     /*
       Lambert light calculation.
      */
-    float NxL = dot(n, l);
+    float NxL = dot(shading_data.normal, l);
     return max(NxL, 0.0);
 }
 
-float attenuation(float light_radius, float light_dist) {
+float linear_attenuation(float light_radius, float light_dist) {
     /*
       Light attenuation.
      */
@@ -33,11 +55,7 @@ int get_ss_slot(vec3 dir) {
     return dir.z >= 0.0 ? 4 : 5;
 }
 
-#if (SUPPORTS_SHADOW_FILTER == 1)
-float process_shadow(samplerBuffer light_data, sampler2DShadow shadowmap, int ss0_slot, vec3 light_vec, float light_dist, vec3 vert_pos) {
-#else
-float process_shadow(samplerBuffer light_data, sampler2D shadowmap, int ss0_slot, vec3 light_vec, float light_dist, vec3 vert_pos) {
-#endif
+float process_shadow(samplerBuffer light_data, SHADOWMAP shadowmap, SHADING_DATA shading_data, int ss0_slot, vec3 light_vec, float light_dist) {
     /*
       https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
     */
@@ -58,7 +76,7 @@ float process_shadow(samplerBuffer light_data, sampler2D shadowmap, int ss0_slot
     mat4 ss_mvp = mat4(ss_mvp0, ss_mvp1, ss_mvp2, ss_mvp3);
 
     // light-space fragment position
-    vec4 light_clip = ss_mvp * vec4(vert_pos, 1.0);
+    vec4 light_clip = ss_mvp * vec4(shading_data.vert_pos, 1.0);
 
     // perform perspective divide
     vec3 shadow_uv = light_clip.xyz / light_clip.w;
@@ -94,11 +112,7 @@ float process_shadow(samplerBuffer light_data, sampler2D shadowmap, int ss0_slot
     return clamp(light_shadow / 9.0, 0.0, 1.0);
 }
 
-#if (SUPPORTS_SHADOW_FILTER == 1)
-vec4 process_light(samplerBuffer light_data, sampler2DShadow shadowmap, int light_slot, vec3 vert_pos, vec3 normal) {
-#else
-vec4 process_light(samplerBuffer light_data, sampler2D shadowmap, int light_slot, vec3 vert_pos, vec3 normal) {
-#endif
+vec4 process_light(samplerBuffer light_data, SHADOWMAP shadowmap, SHADING_DATA shading_data, int light_slot) {
     // load and parse data
     int index = LIGHT_INFO_SIZE * light_slot / RGBA32;
     vec4 lights1 = texelFetch(light_data, index + 1);
@@ -112,15 +126,15 @@ vec4 process_light(samplerBuffer light_data, sampler2D shadowmap, int light_slot
     vec3 light_pos = lights0.yzw;
 
     // prepare input values
-    vec3 light_vec = normalize(light_pos - vert_pos);
-    float light_dist = distance(light_pos, vert_pos);
+    vec3 light_vec = normalize(light_pos - shading_data.vert_pos);
+    float light_dist = distance(light_pos, shading_data.vert_pos);
 
     // calculate lights and shadows
-    float light_power = lambert(light_vec, normal);
-    float light_attenuation = attenuation(light_radius, light_dist);
+    float light_power = LIGHT_MODEL(shading_data, light_vec);
+    float light_attenuation = LIGHT_ATTENUATION(light_radius, light_dist);
     float light_shadow = 1;
     if (ss0_slot >= 0 && light_power >= 0.001) {
-        light_shadow = process_shadow(light_data, shadowmap, ss0_slot, light_vec, light_dist, vert_pos);
+        light_shadow = process_shadow(light_data, shadowmap, shading_data, ss0_slot, light_vec, light_dist);
     }
 
     // colorize
@@ -128,15 +142,11 @@ vec4 process_light(samplerBuffer light_data, sampler2D shadowmap, int light_slot
     return vec4(light_col * lightness, lightness);
 }
 
-#if (SUPPORTS_SHADOW_FILTER == 1)
-vec4 process_shading(samplerBuffer light_data, sampler2DShadow shadowmap, vec3 vert_pos, vec3 normal) {
-#else
-vec4 process_shading(samplerBuffer light_data, sampler2D shadowmap, vec3 vert_pos, vec3 normal) {
-#endif
+vec4 process_shading(samplerBuffer light_data, SHADOWMAP shadowmap, SHADING_DATA shading_data) {
     vec4 shading = vec4(0.0, 0.0, 0.0, 0.0);
     int lights = 0;
     for (int light_slot = 0; light_slot < MAX_LIGHTS; light_slot++) {
-        vec4 light_shading = process_light(light_data, shadowmap, light_slot, vert_pos, normal);
+        vec4 light_shading = process_light(light_data, shadowmap, shading_data, light_slot);
         shading += light_shading;
 
         if (light_shading.a >= 0.001) lights++;
