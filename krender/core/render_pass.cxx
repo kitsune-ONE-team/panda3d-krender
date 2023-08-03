@@ -67,7 +67,8 @@ PointerTo<GraphicsOutput> RenderPass::_make_fbo(
     if (has_srgb)
         fbp->set_srgb_color(true);
     if (num_textures > 1) {
-        fbp->set_depth_bits(1);
+        fbp->set_depth_bits(32);
+        fbp->set_float_depth(true);
         fbp->set_aux_rgba(2);
     }
 

@@ -6,7 +6,7 @@ import subprocess
 from distutils.command.build_ext import build_ext
 
 
-class kphys_build_ext(build_ext):
+class krender_build_ext(build_ext):
     def run(self):
         build_temp = os.path.abspath(self.build_temp)
         build_lib = os.path.abspath(self.build_lib)
@@ -27,7 +27,7 @@ class kphys_build_ext(build_ext):
 if __name__ == "__main__":
     setuptools.setup(
         name='panda3d-krender',
-        version='0.0.22',
+        version='0.0.23',
         description='Deferred Render Pipeline for Panda3D',
         long_description=(
             'Deferred Render Pipeline for Panda3D '
@@ -46,6 +46,6 @@ if __name__ == "__main__":
             setuptools.Extension('krender.core', sources=[]),
         ],
         cmdclass={
-            'build_ext': kphys_build_ext,
+            'build_ext': krender_build_ext,
         },
     )
