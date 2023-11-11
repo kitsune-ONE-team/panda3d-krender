@@ -3,6 +3,7 @@ set(CORE_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/helpers.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/lighting_pipeline.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/post_pass.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/progress_bar.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/render_pass.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/scene_pass.cxx
@@ -15,6 +16,7 @@ set(CORE_HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/light_data.h
   ${CMAKE_CURRENT_SOURCE_DIR}/lighting_pipeline.h
   ${CMAKE_CURRENT_SOURCE_DIR}/post_pass.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/progress_bar.h
   ${CMAKE_CURRENT_SOURCE_DIR}/render_pass.h
   ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline.h
   ${CMAKE_CURRENT_SOURCE_DIR}/scene_pass.h

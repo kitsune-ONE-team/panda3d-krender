@@ -2,6 +2,7 @@
 
 #include "krender/core/config.h"
 #include "krender/core/lighting_pipeline.h"
+#include "krender/core/progress_bar.h"
 #include "krender/core/render_pass.h"
 #include "krender/core/render_pipeline.h"
 
@@ -21,6 +22,7 @@ void init_libcore() {
 
     RenderPipeline::init_type();
     LightingPipeline::init_type();
+    ProgressBar::init_type();
 
     return;
 }
