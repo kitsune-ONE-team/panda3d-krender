@@ -47,6 +47,8 @@ LightingPipeline::LightingPipeline(
     _configure();
 
     _scene = NodePath(new PandaNode("Scene"));
+    _shadow_cams = NodePath(new PandaNode("ShadowCams"));
+    _shadow_cams.reparent_to(_scene);
 
     _create_shadowmap();
     _create_shadow_manager();
@@ -170,6 +172,7 @@ void LightingPipeline::_create_shadow_manager() {
         // which was configured while registering camera with a TagStateManager
         NodePath camera = region->get_camera();
         if (!camera.is_empty()) {
+            camera.reparent_to(_shadow_cams);
             ((Camera*) camera.node())->set_initial_state(state);
             ((Camera*) camera.node())->set_camera_mask(1 << CAMERA_BIT_SHADOW);
         }

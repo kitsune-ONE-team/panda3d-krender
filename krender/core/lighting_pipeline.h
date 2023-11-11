@@ -62,6 +62,7 @@ protected:
 
 private:
     NodePath _scene;
+    NodePath _shadow_cams;
     unsigned int _shadow_size;
 
     PointerTo<GraphicsOutput> _shadowmap_fbo;
