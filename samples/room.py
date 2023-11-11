@@ -2,16 +2,17 @@
 import os
 import sys
 
-PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(PROJECT_PATH, 'dist'))
+# PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.insert(0, os.path.join(PROJECT_PATH, 'dist'))
 
 from krender.core import RenderPipeline
 
+from direct.gui.DirectGui import OnscreenImage
 from direct.showbase.ShowBase import ShowBase
+
 from panda3d.core import (
     get_model_path, load_prc_file_data, ClockObject, LColor,
     Material, NodePath, PointLight, Shader, Texture)
-from panda3d._rplight import RPPointLight
 
 
 class Sample(ShowBase):
@@ -21,6 +22,7 @@ class Sample(ShowBase):
             framebuffer-srgb t
             framebuffer-alpha f
             show-frame-rate-meter t
+            textures-power-2 f
         ''')
         super().__init__()
         has_srgb = self.win.get_fb_properties().get_srgb_color()
@@ -28,7 +30,6 @@ class Sample(ShowBase):
         # add krender module to search path
         from krender import core
         get_model_path().prepend_directory(os.path.dirname(os.path.dirname(core.__file__)))
-        get_model_path().prepend_directory(os.getcwd())
 
         # limit to 60 FPS
         clock = ClockObject.get_global_clock()
@@ -39,10 +40,10 @@ class Sample(ShowBase):
         self._render_pipeline = RenderPipeline(
             self.win, self.render2d, self.cam, self.cam2d,
             has_srgb=has_srgb, has_alpha=False, has_pcf=True, shadow_size=512)
-        self._render_pipeline.add_render_pass('base')
+        self._render_pipeline.add_render_pass('base', 0)
 
         # add depth of field render pass
-        self._render_pipeline.add_render_pass('dof')
+        self._render_pipeline.add_render_pass('dof', 1)
         dof_card = self._render_pipeline.get_source_card('dof')
         dof_card.set_shader_input('dof_focus_near', 15.0)
         dof_card.set_shader_input('dof_blur_near', 15.0 - 5.0)
@@ -54,7 +55,7 @@ class Sample(ShowBase):
             'krender/shader/dof.frag.glsl'), 100)
 
         # add bloom render pass
-        self._render_pipeline.add_render_pass('bloom', Shader.load(
+        self._render_pipeline.add_render_pass('bloom', 1, Shader.load(
             Shader.SL_GLSL,
             'krender/shader/bloom.vert.glsl',
             'krender/shader/bloom.frag.glsl'))
@@ -65,6 +66,12 @@ class Sample(ShowBase):
             Shader.SL_GLSL,
             'krender/shader/default.vert.glsl',
             'krender/shader/default.frag.glsl'), 100)
+
+        # show last pass on screen
+        tex = self._render_pipeline.get_texture('bloom', 0)
+        self._viewer = OnscreenImage(parent=self.render2d)
+        self._viewer.setImage(tex)
+        self._viewer.reparent_to(self.render2d)
 
         # move camera
         self.cam.set_pos(-2.5, -20, 1.5)
@@ -121,7 +128,7 @@ class Sample(ShowBase):
         self.accept('escape', sys.exit)
         self.accept('q', sys.exit)
         self.accept('f3', self.toggleWireframe)
-        self.accept('f4', self.bufferViewer.toggle_enable)
+        self.accept('f4', self.bufferViewer.toggleEnable)
         self.accept('f5', self._render_pipeline.invalidate_shadows)
 
         # entity movement keys

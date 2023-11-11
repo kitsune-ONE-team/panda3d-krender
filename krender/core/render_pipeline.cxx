@@ -41,27 +41,31 @@ void RenderPipeline::add_render_pass(char* name, unsigned short type, Shader* sh
         PostPass* post_pass = new PostPass(
             name, _post_passes.size(), _win, _camera2d, _has_srgb, _has_alpha, prev_plane);
 
-        if (_post_passes.size() == 0) {
-            // pass textures from the scene passes to the current render pass
-            for (unsigned int i = 0; i < _scene_passes.size(); i++) {
-                RenderPass* scene_pass = _scene_passes[i];
-                for (unsigned int j = 0; j < scene_pass->get_num_textures(); j++) {
-                    PointerTo<Texture> t = scene_pass->get_texture(j);
-                    char* s = (char*) malloc((
-                        strlen(scene_pass->get_name()) +
-                        strlen(t->get_name().c_str()) + 1) * sizeof(char));
-                    sprintf(s, "%s_%s", scene_pass->get_name(), t->get_name().c_str());
-                    post_pass->get_source_card().set_shader_input(ShaderInput(std::string(s), t));
-                }
-            }
-
-        } else {
-            // pass textures from the previous post pass to the current render pass
-            RenderPass* prev_post_pass = _post_passes.back();
-            for (unsigned int j = 0; j < prev_post_pass->get_num_textures(); j++) {
-                PointerTo<Texture> t = prev_post_pass->get_texture(j);
+        // pass textures from the scene passes to the current render pass
+        for (unsigned int i = 0; i < _scene_passes.size(); i++) {
+            RenderPass* scene_pass = _scene_passes[i];
+            for (unsigned int j = 0; j < scene_pass->get_num_textures(); j++) {
+                PointerTo<Texture> t = scene_pass->get_texture(j);
                 char* s = (char*) malloc((
-                    strlen("prev") + strlen(t->get_name().c_str()) + 1) * sizeof(char));
+                    strlen(scene_pass->get_name()) +
+                    strlen(t->get_name().c_str()) + 1) * sizeof(char));
+                sprintf(s, "%s_%s", scene_pass->get_name(), t->get_name().c_str());
+                post_pass->get_source_card().set_shader_input(ShaderInput(std::string(s), t));
+            }
+        }
+
+        // pass textures from the previous post pass to the current render pass
+        RenderPass* prev_pass = NULL;
+        if (_post_passes.size()) {
+            prev_pass = _post_passes.back();
+        } else if (_scene_passes.size()) {
+            prev_pass = _scene_passes.back();
+        }
+        if (prev_pass != NULL) {
+            for (unsigned int j = 0; j < prev_pass->get_num_textures(); j++) {
+                PointerTo<Texture> t = prev_pass->get_texture(j);
+                char* s = (char*) malloc((
+                    strlen("prev_") + strlen(t->get_name().c_str())) * sizeof(char));
                 sprintf(s, "prev_%s", t->get_name().c_str());
                 post_pass->get_source_card().set_shader_input(ShaderInput(std::string(s), t));
             }
@@ -79,10 +83,6 @@ void RenderPipeline::add_render_pass(char* name, unsigned short type, Shader* sh
 
         render_pass = (RenderPass*) post_pass;
     }
-
-    // show current plane on screen
-    NodePath plane = render_pass->get_result_card();
-    plane.reparent_to(_render2d);
 }
 
 NodePath RenderPipeline::get_source_card(char* name) {
@@ -97,6 +97,34 @@ NodePath RenderPipeline::get_source_card(char* name) {
         }
     }
     return NodePath::not_found();
+}
+
+NodePath RenderPipeline::get_result_card(char* name) {
+    for (unsigned int i = 0; i < _scene_passes.size(); i++) {
+        if (strcmp(_scene_passes[i]->get_name(), name) == 0) {
+            return _scene_passes[i]->get_result_card();
+        }
+    }
+    for (unsigned int i = 0; i < _post_passes.size(); i++) {
+        if (strcmp(_post_passes[i]->get_name(), name) == 0) {
+            return _post_passes[i]->get_result_card();
+        }
+    }
+    return NodePath::not_found();
+}
+
+PointerTo<Texture> RenderPipeline::get_texture(char* name, unsigned int j) {
+    for (unsigned int i = 0; i < _scene_passes.size(); i++) {
+        if (strcmp(_scene_passes[i]->get_name(), name) == 0) {
+            return _scene_passes[i]->get_texture(j);
+        }
+    }
+    for (unsigned int i = 0; i < _post_passes.size(); i++) {
+        if (strcmp(_post_passes[i]->get_name(), name) == 0) {
+            return _post_passes[i]->get_texture(j);
+        }
+    }
+    return NULL;
 }
 
 void RenderPipeline::update() {

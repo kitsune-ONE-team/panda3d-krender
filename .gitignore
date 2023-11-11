@@ -2,4 +2,6 @@
 *.so
 *.whl
 .krender_config.inc.glsl
+/build/
+/dist/
 __pycache__

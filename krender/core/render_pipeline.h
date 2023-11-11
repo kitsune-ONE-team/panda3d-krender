@@ -26,6 +26,8 @@ PUBLISHED:
     };
     void add_render_pass(char* name, unsigned short type, Shader* shader=nullptr);
     NodePath get_source_card(char* name);
+    NodePath get_result_card(char* name);
+    PointerTo<Texture> get_texture(char* name, unsigned int i);
     void update();
 
 private:

@@ -48,7 +48,10 @@ void main() {
     emissive.rgb = diffuse.rgb * emission.rgb;
     emissive.a = diffuse.a;
 
-    vec4 shading = process_shading(light_data, shadowmap, vert_pos, normal);
+    ShadingData shading_data;
+    shading_data.vert_pos = vert_pos;
+    shading_data.normal = normal;
+    vec4 shading = process_shading(light_data, shadowmap, shading_data);
     shading += min(emissive.r + emissive.g + emissive.b, 1.0);
 
     color.rgb = diffuse.rgb * p3d_Material.baseColor.rgb * shading.rgb;

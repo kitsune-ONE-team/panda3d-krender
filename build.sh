@@ -4,8 +4,6 @@ mkdir -p build
 cd build
 cmake -G "Unix Makefiles" \
     -DCMAKE_INSTALL_PREFIX=/panda3d-krender/lib/python3.10/site-packages \
-    -DBULLET_INCLUDE_DIR=/root/jenkins/workspace/bullet-lynx64/dist/bullet/include \
-    -DBULLET_LIBRARY_DIR=/root/jenkins/workspace/bullet-lynx64/dist/bullet/lib \
     -DINSTALL_PY=ON \
     -DPANDA_BINARY_DIR=/root/jenkins/workspace/panda3d-lynx64/dist/panda3d/bin \
     -DPANDA_INCLUDE_DIR=/root/jenkins/workspace/panda3d-lynx64/dist/panda3d/include \
