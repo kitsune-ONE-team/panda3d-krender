@@ -64,6 +64,7 @@ float process_shadow(samplerBuffer light_data, SHADOWMAP shadowmap, SHADING_DATA
 #else
     float bias = SHADOW_BIAS;
 #endif
+    bias *= 4096.0 / textureSize(shadowmap, 0).x;
 
     // find a single Shadow Source slot to process
     int ss_slot = ss0_slot + get_ss_slot(-light_vec);
