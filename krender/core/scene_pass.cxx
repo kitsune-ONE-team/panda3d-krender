@@ -7,7 +7,7 @@ ScenePass::ScenePass(
         RenderPass(name, index, win, cam, has_srgb, has_alpha, card) {
     _fbo = _make_fbo(win, has_srgb, has_alpha, 4, _index);
     _make_textures();
-    char* cam_name = (char*) malloc((strlen(name) + strlen("_camera")) * sizeof(char));
+    char* cam_name = (char*) malloc((strlen(name) + strlen("_camera") + 1) * sizeof(char));
     sprintf(cam_name, "%s_camera", name);
     _cam = _make_camera(_fbo, cam_name, cam);
 }

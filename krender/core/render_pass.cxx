@@ -80,7 +80,7 @@ PointerTo<GraphicsOutput> RenderPass::_make_fbo(
     else
         fbo->set_clear_color(LVecBase4(0, 0, 0, 1));
 
-    char* card_name = (char*) malloc((strlen(_name) + strlen("_card")) * sizeof(char));
+    char* card_name = (char*) malloc((strlen(_name) + strlen("_card") + 1) * sizeof(char));
     sprintf(card_name, "%s_card", _name);
 
     _result_card = fbo->get_texture_card();
