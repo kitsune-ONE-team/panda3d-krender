@@ -48,7 +48,7 @@ void RenderPipeline::add_render_pass(char* name, unsigned short type, Shader* sh
                 PointerTo<Texture> t = scene_pass->get_texture(j);
                 char* s = (char*) malloc((
                     strlen(scene_pass->get_name()) +
-                    strlen(t->get_name().c_str()) + 1) * sizeof(char));
+                    strlen(t->get_name().c_str()) + 2) * sizeof(char));
                 sprintf(s, "%s_%s", scene_pass->get_name(), t->get_name().c_str());
                 post_pass->get_source_card().set_shader_input(ShaderInput(std::string(s), t));
             }
