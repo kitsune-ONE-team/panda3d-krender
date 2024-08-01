@@ -12,8 +12,9 @@
 #include "krender/core/render_pass.h"
 
 
-RenderPass::RenderPass(char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
-                       bool has_srgb, bool has_alpha, NodePath card) {
+RenderPass::RenderPass(
+        char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
+        bool has_srgb, bool has_alpha, NodePath card) {
     _name = name;
     _index = index;
     _source_card = card;
@@ -74,7 +75,7 @@ PointerTo<GraphicsOutput> RenderPass::_make_fbo(
 
     PointerTo<GraphicsOutput> fbo = win->make_texture_buffer(_name, 0, 0, nullptr, false, fbp);
     fbo->clear_render_textures();
-    fbo->set_sort(sort - 10);
+    fbo->set_sort(sort);
     if (has_alpha)
         fbo->set_clear_color(LVecBase4(0, 0, 0, 0));
     else
@@ -90,10 +91,10 @@ PointerTo<GraphicsOutput> RenderPass::_make_fbo(
 }
 
 void RenderPass::_make_textures() {
-    char* tex_name;
-    PointerTo<Texture> t;
+    char* tex_name = (char*) malloc((strlen(_name) + strlen("_color") + 1) * sizeof(char));
+    sprintf(tex_name, "%s_color", _name);
 
-    t = new Texture("color");
+    PointerTo<Texture> t = new Texture(tex_name);
     t->set_format(Texture::Format::F_srgb_alpha);
     t->set_wrap_u(SamplerState::WM_clamp);
     t->set_wrap_v(SamplerState::WM_clamp);

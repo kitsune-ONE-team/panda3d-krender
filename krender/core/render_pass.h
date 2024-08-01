@@ -7,13 +7,14 @@
 #include "texture.h"
 #include "pvector.h"
 
+
 BEGIN_PUBLISH
 enum RenderPassType {
     SCENE_PASS = 0,
-    POST_PASS = 1
+    POST_PASS = 1,
+    DEPTH_PASS = 2
 };
 END_PUBLISH
-
 
 class RenderPass {
 public:

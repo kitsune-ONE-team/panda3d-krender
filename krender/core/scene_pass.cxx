@@ -15,10 +15,10 @@ ScenePass::ScenePass(
 void ScenePass::_make_textures() {
     RenderPass::_make_textures();
 
-    char* tex_name;
-    PointerTo<Texture> t;
+    char* tex_name = (char*) malloc((strlen(_name) + strlen("_depth") + 1) * sizeof(char));
+    sprintf(tex_name, "%s_depth", _name);
 
-    t = new Texture("depth");
+    PointerTo<Texture> t = new Texture(tex_name);
     t->set_format(Texture::Format::F_depth_component);
     t->set_wrap_u(SamplerState::WM_clamp);
     t->set_wrap_v(SamplerState::WM_clamp);
@@ -27,7 +27,10 @@ void ScenePass::_make_textures() {
     _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_depth);
     _tex.push_back(t);
 
-    t = new Texture("emissive");
+    tex_name = (char*) malloc((strlen(_name) + strlen("_emissive") + 1) * sizeof(char));
+    sprintf(tex_name, "%s_emissive", _name);
+
+    t = new Texture(tex_name);
     t->set_format(Texture::Format::F_srgb_alpha);
     t->set_wrap_u(SamplerState::WM_clamp);
     t->set_wrap_v(SamplerState::WM_clamp);
@@ -36,7 +39,10 @@ void ScenePass::_make_textures() {
     _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_aux_rgba_0);
     _tex.push_back(t);
 
-    t = new Texture("selector");
+    tex_name = (char*) malloc((strlen(_name) + strlen("_selector") + 1) * sizeof(char));
+    sprintf(tex_name, "%s_selector", _name);
+
+    t = new Texture(tex_name);
     t->set_format(Texture::Format::F_srgb_alpha);
     t->set_wrap_u(SamplerState::WM_clamp);
     t->set_wrap_v(SamplerState::WM_clamp);

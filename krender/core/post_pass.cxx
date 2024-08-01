@@ -8,7 +8,7 @@ PostPass::PostPass(
         char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
         bool has_srgb, bool has_alpha, NodePath card):
         RenderPass(name, index, win, cam, has_srgb, has_alpha, card) {
-    _fbo = _make_fbo(win, has_srgb, has_alpha, 1, _index + 10);
+    _fbo = _make_fbo(win, has_srgb, has_alpha, 1, _index);
     _make_textures();
     char* cam_name = (char*) malloc((strlen(name) + strlen("_camera") + 1) * sizeof(char));
     sprintf(cam_name, "%s_camera", name);
@@ -34,7 +34,7 @@ NodePath PostPass::_make_camera(PointerTo<GraphicsOutput> fbo, char* name, NodeP
     DisplayRegion* dr = fbo->make_mono_display_region();
     dr->set_clear_depth_active(1);
     dr->set_incomplete_render(false);
-    dr->set_sort(_index + 10);
+    dr->set_sort(_index);
     dr->set_camera(cam);
 
     return cam;
