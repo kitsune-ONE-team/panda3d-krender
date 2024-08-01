@@ -4,6 +4,7 @@
 #include "texture.h"
 #include "windowProperties.h"
 
+#include "krender/core/depth_pass.h"
 #include "krender/core/helpers.h"
 #include "krender/core/post_pass.h"
 #include "krender/core/render_pipeline.h"
@@ -12,23 +13,50 @@
 
 TypeHandle RenderPipeline::_type_handle;
 
-void RenderPipeline::add_render_pass(char* name, unsigned short type, Shader* shader) {
+RenderPipeline::RenderPipeline(
+        GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
+        unsigned int index, unsigned int shadow_size,
+        bool has_srgb, bool has_pcf, bool has_alpha):
+        LightingPipeline(window, camera, has_srgb, has_pcf, shadow_size) {
+    _camera2d = camera2d;
+    _render2d = render2d;
+    _has_alpha = has_alpha;
+    _index = index;
+    _win_w = window->get_x_size();
+    _win_h = window->get_y_size();
+}
+
+void RenderPipeline::add_render_pass(
+        char* name, unsigned short type, Shader* shader, BitMask32 mask) {
     RenderPass* render_pass;
 
     if (type == SCENE_PASS) {
         ScenePass* scene_pass = new ScenePass(
-            name, _scene_passes.size(), _win, _camera, _has_srgb, _has_alpha);
+            name, _scene_passes.size() + _index, _win, _camera, _has_srgb, _has_alpha);
 
         // setup camera which which captures scene
         // and renders into FBO using default camera lens
         NodePath cam = scene_pass->get_camera();
         ((Camera*) cam.node())->set_scene(get_scene());
-        ((Camera*) cam.node())->set_camera_mask(
-            1 << (CAMERA_BIT_DEFERRED_FIRST + _scene_passes.size()));
+        ((Camera*) cam.node())->set_camera_mask(mask);
 
         _scene_passes.push_back((RenderPass*) scene_pass);
 
-        render_pass = (RenderPass*) scene_pass;
+        // render_pass = (RenderPass*) scene_pass;
+
+    } else if (type == DEPTH_PASS) {
+        DepthPass* depth_pass = new DepthPass(
+            name, _scene_passes.size() + _index, _win, _camera, _has_srgb, _has_alpha);
+
+        // setup camera which which captures scene
+        // and renders into FBO using default camera lens
+        NodePath cam = depth_pass->get_camera();
+        ((Camera*) cam.node())->set_scene(get_scene());
+        ((Camera*) cam.node())->set_camera_mask(mask);
+
+        _scene_passes.push_back((RenderPass*) depth_pass);
+
+        // render_pass = (RenderPass*) depth_pass;
 
     } else {  // POST_PASS
         // get plane from previous render pass
@@ -39,18 +67,15 @@ void RenderPipeline::add_render_pass(char* name, unsigned short type, Shader* sh
             prev_plane = _scene_passes.back()->get_result_card();
 
         PostPass* post_pass = new PostPass(
-            name, _post_passes.size(), _win, _camera2d, _has_srgb, _has_alpha, prev_plane);
+            name, _scene_passes.size() + _post_passes.size() + _index, _win,
+            _camera2d, _has_srgb, _has_alpha, prev_plane);
 
         // pass textures from the scene passes to the current render pass
         for (unsigned int i = 0; i < _scene_passes.size(); i++) {
             RenderPass* scene_pass = _scene_passes[i];
             for (unsigned int j = 0; j < scene_pass->get_num_textures(); j++) {
                 PointerTo<Texture> t = scene_pass->get_texture(j);
-                char* s = (char*) malloc((
-                    strlen(scene_pass->get_name()) +
-                    strlen(t->get_name().c_str()) + 2) * sizeof(char));
-                sprintf(s, "%s_%s", scene_pass->get_name(), t->get_name().c_str());
-                post_pass->get_source_card().set_shader_input(ShaderInput(std::string(s), t));
+                post_pass->get_source_card().set_shader_input(ShaderInput(t->get_name(), t));
             }
         }
 
@@ -62,12 +87,10 @@ void RenderPipeline::add_render_pass(char* name, unsigned short type, Shader* sh
             prev_pass = _scene_passes.back();
         }
         if (prev_pass != NULL) {
-            for (unsigned int j = 0; j < prev_pass->get_num_textures(); j++) {
+            for (unsigned int j = 0; j < prev_pass->get_num_textures() && j < 1; j++) {
                 PointerTo<Texture> t = prev_pass->get_texture(j);
-                char* s = (char*) malloc((
-                    strlen("prev_") + strlen(t->get_name().c_str()) + 1) * sizeof(char));
-                sprintf(s, "prev_%s", t->get_name().c_str());
-                post_pass->get_source_card().set_shader_input(ShaderInput(std::string(s), t));
+                post_pass->get_source_card().set_shader_input(
+                    ShaderInput(std::string("prev_color"), t));
             }
         }
 
@@ -81,8 +104,22 @@ void RenderPipeline::add_render_pass(char* name, unsigned short type, Shader* sh
         NodePath cam = post_pass->get_camera();
         ((Camera*) cam.node())->set_scene(prev_plane);
 
-        render_pass = (RenderPass*) post_pass;
+        // render_pass = (RenderPass*) post_pass;
     }
+}
+
+NodePath RenderPipeline::get_camera(char* name) {
+    for (unsigned int i = 0; i < _scene_passes.size(); i++) {
+        if (strcmp(_scene_passes[i]->get_name(), name) == 0) {
+            return _scene_passes[i]->get_camera();
+        }
+    }
+    for (unsigned int i = 0; i < _post_passes.size(); i++) {
+        if (strcmp(_post_passes[i]->get_name(), name) == 0) {
+            return _post_passes[i]->get_camera();
+        }
+    }
+    return NodePath::not_found();
 }
 
 NodePath RenderPipeline::get_source_card(char* name) {
@@ -139,5 +176,6 @@ void RenderPipeline::update() {
             _post_passes[i]->reload_shader();
         }
     }
+
     LightingPipeline::update();
 }

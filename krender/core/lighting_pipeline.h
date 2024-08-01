@@ -31,7 +31,6 @@ class TagStateManager;
 #define GPU_COMMAND_SIZE 32
 #define MAX_UPDATES MAX_LIGHTS * 6
 #define CAMERA_BIT_SHADOW 2
-#define CAMERA_BIT_DEFERRED_FIRST 3
 
 
 class EXPORT_CLASS LightingPipeline: public TypedWritableReferenceCount {

@@ -1,6 +1,7 @@
 #ifndef CORE_RENDER_PIPELINE_H
 #define CORE_RENDER_PIPELINE_H
 
+#include "bitMask.h"
 #include "graphicsWindow.h"
 #include "nodePath.h"
 #include "pandabase.h"
@@ -14,17 +15,13 @@
 class EXPORT_CLASS RenderPipeline: public LightingPipeline {
 PUBLISHED:
     RenderPipeline(
-            GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
-            unsigned int shadow_size=512,
-            bool has_srgb=false, bool has_pcf=false, bool has_alpha=false):
-    LightingPipeline(window, camera, has_srgb, has_pcf, shadow_size) {
-        _camera2d = camera2d;
-        _render2d = render2d;
-        _has_alpha = has_alpha;
-        _win_w = window->get_x_size();
-        _win_h = window->get_y_size();
-    };
-    void add_render_pass(char* name, unsigned short type, Shader* shader=nullptr);
+        GraphicsWindow* window, NodePath render2d, NodePath camera, NodePath camera2d,
+        unsigned int index=0, unsigned int shadow_size=512,
+        bool has_srgb=false, bool has_pcf=false, bool has_alpha=false);
+    void add_render_pass(
+        char* name, unsigned short type,
+        Shader* shader=nullptr, BitMask32 mask=BitMask32(0));
+    NodePath get_camera(char* name);
     NodePath get_source_card(char* name);
     NodePath get_result_card(char* name);
     PointerTo<Texture> get_texture(char* name, unsigned int i);
@@ -34,10 +31,10 @@ private:
     NodePath _camera2d;
     NodePath _render2d;
     bool _has_alpha;
+    unsigned int _index;
     unsigned int _win_w;
     unsigned int _win_h;
 
-    int _index;
     pvector<RenderPass*> _scene_passes;
     pvector<RenderPass*> _post_passes;
     static TypeHandle _type_handle;
