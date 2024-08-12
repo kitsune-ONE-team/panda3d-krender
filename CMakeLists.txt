@@ -39,45 +39,48 @@ else()
   set(INTERROGATE_MODULE env LD_LIBRARY_PATH=${PANDA_LIBRARY_DIR} ${PANDA_BINARY_DIR}/interrogate_module)
 endif()
 
-if(WIN32)
+if((EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.so") OR
+    (EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.lib"))
   set(PANDA_PREFIX "lib")
 else()
-  set(PANDA_PREFIX "")
-endif()
-if((EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.so") OR (EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.lib"))
-  # makepanda build
-  set(PANDA_LIBS
-    # PRIMARY
-    ${PANDA_PREFIX}p3framework
-    # COMMON_PANDA_LIBS
-    ${PANDA_PREFIX}panda
-    ${PANDA_PREFIX}pandaexpress
-    # COMMON_DTOOL_LIBS
-    ${PANDA_PREFIX}p3dtool
-    ${PANDA_PREFIX}p3dtoolconfig
-    # EXTRA
-    ${PANDA_PREFIX}p3direct
-    ${PANDA_PREFIX}p3interrogatedb)
-else()
-  # cmake build
-  set(PANDA_LIBS
-    # PRIMARY
-    p3framework
-    # COMMON_PANDA_LIBS
-    panda
-    pandaexpress
-    # COMMON_DTOOL_LIBS
-    p3dtool
-    p3dtoolconfig
-    # EXTRA
-    p3direct
-    p3interrogatedb)
+  if(WIN32)
+    set(PANDA_PREFIX "lib")
+  else()
+    set(PANDA_PREFIX "")
+  endif()
 endif()
 
+set(PANDA_SUFFIX "")
+# if(WIN32)
+#   set(PANDA_SUFFIX ".lib")
+# else()
+#   set(PANDA_SUFFIX "")
+# endif()
+
+set(PANDA_LIBS
+  # PRIMARY
+  ${PANDA_PREFIX}p3framework${PANDA_SUFFIX}
+  # COMMON_PANDA_LIBS
+  ${PANDA_PREFIX}panda${PANDA_SUFFIX}
+  ${PANDA_PREFIX}pandaexpress${PANDA_SUFFIX}
+  # COMMON_DTOOL_LIBS
+  ${PANDA_PREFIX}p3dtool${PANDA_SUFFIX}
+  ${PANDA_PREFIX}p3dtoolconfig${PANDA_SUFFIX}
+  # EXTRA
+  ${PANDA_PREFIX}p3direct${PANDA_SUFFIX}
+  ${PANDA_PREFIX}p3interrogatedb${PANDA_SUFFIX}
+)
+
 if((EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.a") OR (EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.lib"))
-  set(PANDA_LIBS "${PANDA_LIBS} libp3rplight")
+  set(PANDA_LIBS
+    ${PANDA_LIBS}
+    libp3rplight${PANDA_SUFFIX}
+  )
 else()
-  set(PANDA_LIBS "${PANDA_LIBS} p3rplight")
+  set(PANDA_LIBS
+    ${PANDA_LIBS}
+    p3rplight${PANDA_SUFFIX}
+  )
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
