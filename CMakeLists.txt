@@ -57,8 +57,7 @@ if((EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.so") OR (EXISTS "${PANDA_LIBRARY
     ${PANDA_PREFIX}p3dtoolconfig
     # EXTRA
     ${PANDA_PREFIX}p3direct
-    ${PANDA_PREFIX}p3interrogatedb
-
+    ${PANDA_PREFIX}p3interrogatedb)
 else()
   # cmake build
   set(PANDA_LIBS
