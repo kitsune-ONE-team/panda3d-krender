@@ -39,47 +39,45 @@ else()
   set(INTERROGATE_MODULE env LD_LIBRARY_PATH=${PANDA_LIBRARY_DIR} ${PANDA_BINARY_DIR}/interrogate_module)
 endif()
 
-if((EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.so") OR
-    (EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.lib"))
+if((EXISTS "${PANDA_LIBRARY_DIR}/libp3framework.so") OR
+    (EXISTS "${PANDA_LIBRARY_DIR}/libp3framework.lib"))
   set(PANDA_PREFIX "lib")
 else()
-  if(WIN32)
-    set(PANDA_PREFIX "lib")
-  else()
+  if((EXISTS "${PANDA_LIBRARY_DIR}/p3framework.so") OR
+      (EXISTS "${PANDA_LIBRARY_DIR}/p3framework.lib"))
     set(PANDA_PREFIX "")
+  else()
+    if(WIN32)
+      set(PANDA_PREFIX "lib")
+    else()
+      set(PANDA_PREFIX "")
+    endif()
   endif()
 endif()
 
-set(PANDA_SUFFIX "")
-# if(WIN32)
-#   set(PANDA_SUFFIX ".lib")
-# else()
-#   set(PANDA_SUFFIX "")
-# endif()
-
 set(PANDA_LIBS
   # PRIMARY
-  ${PANDA_PREFIX}p3framework${PANDA_SUFFIX}
+  ${PANDA_PREFIX}p3framework
   # COMMON_PANDA_LIBS
-  ${PANDA_PREFIX}panda${PANDA_SUFFIX}
-  ${PANDA_PREFIX}pandaexpress${PANDA_SUFFIX}
+  ${PANDA_PREFIX}panda
+  ${PANDA_PREFIX}pandaexpress
   # COMMON_DTOOL_LIBS
-  ${PANDA_PREFIX}p3dtool${PANDA_SUFFIX}
-  ${PANDA_PREFIX}p3dtoolconfig${PANDA_SUFFIX}
+  ${PANDA_PREFIX}p3dtool
+  ${PANDA_PREFIX}p3dtoolconfig
   # EXTRA
-  ${PANDA_PREFIX}p3direct${PANDA_SUFFIX}
-  ${PANDA_PREFIX}p3interrogatedb${PANDA_SUFFIX}
+  ${PANDA_PREFIX}p3direct
+  ${PANDA_PREFIX}p3interrogatedb
 )
 
 if((EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.a") OR (EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.lib"))
   set(PANDA_LIBS
     ${PANDA_LIBS}
-    libp3rplight${PANDA_SUFFIX}
+    libp3rplight
   )
 else()
   set(PANDA_LIBS
     ${PANDA_LIBS}
-    p3rplight${PANDA_SUFFIX}
+    p3rplight
   )
 endif()
 
