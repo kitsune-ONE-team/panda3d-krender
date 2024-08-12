@@ -39,13 +39,13 @@ else()
   set(INTERROGATE_MODULE env LD_LIBRARY_PATH=${PANDA_LIBRARY_DIR} ${PANDA_BINARY_DIR}/interrogate_module)
 endif()
 
+if(WIN32)
+  set(PANDA_PREFIX "lib")
+else()
+  set(PANDA_PREFIX "")
+endif()
 if((EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.so") OR (EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.lib"))
   # makepanda build
-  if(WIN32)
-    set(PANDA_PREFIX "lib")
-  else()
-    set(PANDA_PREFIX "")
-  endif()
   set(PANDA_LIBS
     # PRIMARY
     ${PANDA_PREFIX}p3framework
@@ -58,8 +58,6 @@ if((EXISTS "${PANDA_LIBRARY_DIR}/libpandabullet.so") OR (EXISTS "${PANDA_LIBRARY
     # EXTRA
     ${PANDA_PREFIX}p3direct
     ${PANDA_PREFIX}p3interrogatedb
-    # RPLIGHT
-    ${PANDA_PREFIX}p3rplight)
 
 else()
   # cmake build
@@ -74,9 +72,13 @@ else()
     p3dtoolconfig
     # EXTRA
     p3direct
-    p3interrogatedb
-    # RPLIGHT
-    p3rplight)
+    p3interrogatedb)
+endif()
+
+if((EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.a") OR (EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.lib"))
+  set(PANDA_LIBS "${PANDA_LIBS} libp3rplight")
+else()
+  set(PANDA_LIBS "${PANDA_LIBS} p3rplight")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
