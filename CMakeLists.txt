@@ -39,20 +39,14 @@ else()
   set(INTERROGATE_MODULE env LD_LIBRARY_PATH=${PANDA_LIBRARY_DIR} ${PANDA_BINARY_DIR}/interrogate_module)
 endif()
 
-if((EXISTS "${PANDA_LIBRARY_DIR}/libp3framework.so") OR
-    (EXISTS "${PANDA_LIBRARY_DIR}/libp3framework.lib"))
-  set(PANDA_PREFIX "lib")
-else()
-  if((EXISTS "${PANDA_LIBRARY_DIR}/p3framework.so") OR
-      (EXISTS "${PANDA_LIBRARY_DIR}/p3framework.lib"))
-    set(PANDA_PREFIX "")
+if(WIN32)
+  if(EXISTS "${PANDA_LIBRARY_DIR}/libp3framework.lib")
+    set(PANDA_PREFIX "lib")
   else()
-    if(WIN32)
-      set(PANDA_PREFIX "lib")
-    else()
-      set(PANDA_PREFIX "")
-    endif()
+    set(PANDA_PREFIX "")
   endif()
+else()
+  set(PANDA_PREFIX "")
 endif()
 
 set(PANDA_LIBS
@@ -69,11 +63,18 @@ set(PANDA_LIBS
   ${PANDA_PREFIX}p3interrogatedb
 )
 
-if((EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.a") OR (EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.lib"))
-  set(PANDA_LIBS
-    ${PANDA_LIBS}
-    libp3rplight
-  )
+if(WIN32)
+  if(EXISTS "${PANDA_LIBRARY_DIR}/libp3rplight.lib")
+    set(PANDA_LIBS
+      ${PANDA_LIBS}
+      libp3rplight
+    )
+  else()
+    set(PANDA_LIBS
+      ${PANDA_LIBS}
+      p3rplight
+    )
+  endif()
 else()
   set(PANDA_LIBS
     ${PANDA_LIBS}
