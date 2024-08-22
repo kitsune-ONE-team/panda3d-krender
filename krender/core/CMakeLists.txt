@@ -2,6 +2,7 @@ set(CORE_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/config.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/depth_pass.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/helpers.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/instance.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/lighting_pipeline.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/post_pass.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/progress_bar.cxx
@@ -14,6 +15,7 @@ set(CORE_HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h
   ${CMAKE_CURRENT_SOURCE_DIR}/depth_pass.h
   ${CMAKE_CURRENT_SOURCE_DIR}/helpers.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/instance.h
   ${CMAKE_CURRENT_SOURCE_DIR}/light.h
   ${CMAKE_CURRENT_SOURCE_DIR}/light_data.h
   ${CMAKE_CURRENT_SOURCE_DIR}/lighting_pipeline.h

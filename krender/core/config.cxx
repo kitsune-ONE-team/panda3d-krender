@@ -5,6 +5,7 @@
 #include "krender/core/progress_bar.h"
 #include "krender/core/render_pass.h"
 #include "krender/core/render_pipeline.h"
+#include "krender/core/instance.h"
 
 
 Configure(config_core);
@@ -23,6 +24,7 @@ void init_libcore() {
     RenderPipeline::init_type();
     LightingPipeline::init_type();
     ProgressBar::init_type();
+    InstanceNode::init_type();
 
     return;
 }
