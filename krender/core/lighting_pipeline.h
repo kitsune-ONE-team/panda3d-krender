@@ -31,6 +31,7 @@ class TagStateManager;
 #define GPU_COMMAND_SIZE 32
 #define MAX_UPDATES MAX_LIGHTS * 6
 #define CAMERA_BIT_SHADOW 2
+#define CONFIG_INC_GLSL ".krender_config.inc.glsl"
 
 
 class EXPORT_CLASS LightingPipeline: public TypedWritableReferenceCount {
@@ -48,6 +49,7 @@ PUBLISHED:
     int get_num_lights();
     void set_shadow_update_distance(unsigned int x);
     void invalidate_shadows();
+    void invalidate_shadows(unsigned int i);
     void prepare_scene();
 
 protected:

@@ -22,8 +22,7 @@ RenderPipeline::RenderPipeline(
     _render2d = render2d;
     _has_alpha = has_alpha;
     _index = index;
-    _win_w = window->get_x_size();
-    _win_h = window->get_y_size();
+    _win_size = window->get_size();
 }
 
 void RenderPipeline::add_render_pass(
@@ -96,6 +95,7 @@ void RenderPipeline::add_render_pass(
 
         _post_passes.push_back((RenderPass*) post_pass);
 
+        post_pass->get_source_card().set_shader_input("win_size", _win_size);
         if (shader != nullptr)
             post_pass->get_source_card().set_shader(shader, 100);
 
@@ -165,14 +165,11 @@ PointerTo<Texture> RenderPipeline::get_texture(char* name, unsigned int j) {
 }
 
 void RenderPipeline::update() {
-    if (_win_w != _win->get_x_size() || _win_h != _win->get_y_size()) {
-        _win_w = _win->get_x_size();
-        _win_h = _win->get_y_size();
+    if (_win_size.get_x() != _win->get_x_size() || _win_size.get_y() != _win->get_y_size()) {
+        _win_size = _win->get_size();
         _configure();
-        for (unsigned int i = 0; i < _scene_passes.size(); i++) {
-            _scene_passes[i]->reload_shader();
-        }
         for (unsigned int i = 0; i < _post_passes.size(); i++) {
+            _post_passes[i]->get_source_card().set_shader_input("win_size", _win_size);
             _post_passes[i]->reload_shader();
         }
     }

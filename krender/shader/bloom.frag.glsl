@@ -1,7 +1,8 @@
 #version 140
 // version 140, so we can use sampler2D
 
-#pragma include "krender/shader/blur.inc.frag.glsl"
+// custom inputs
+uniform ivec2 win_size;
 
 // custom inputs from the first render pass
 uniform sampler2D base_emissive;
@@ -14,6 +15,8 @@ in vec2 vert_uv;
 
 // outputs
 out vec4 color;
+
+#pragma include "krender/shader/blur.inc.frag.glsl"
 
 
 void main() {

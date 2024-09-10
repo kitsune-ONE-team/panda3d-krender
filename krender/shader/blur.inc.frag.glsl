@@ -19,7 +19,7 @@ float intersect_circle(vec2 d, float radius) {
 }
 
 vec3 process_blur(sampler2D tex, vec2 uv) {
-    float aspect = float(WIN_X_SIZE) / float(WIN_Y_SIZE);
+    float aspect = win_size.x / win_size.y;
     vec2 max_radius = vec2(BLUR_SIZE, BLUR_SIZE * aspect);
     float max_length = length(max_radius);
 

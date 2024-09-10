@@ -41,9 +41,6 @@ LightingPipeline::LightingPipeline(
     _has_pcf = has_pcf;
     _shadow_size = shadow_size;
 
-    VirtualFileSystem* vfs = VirtualFileSystem::get_global_ptr();
-    VirtualFileMountRamdisk* ramdisk = new VirtualFileMountRamdisk();
-    vfs->mount(ramdisk, ".krender", 0);
     _configure();
 
     _scene = NodePath(new PandaNode("Scene"));
@@ -66,21 +63,17 @@ void LightingPipeline::_configure() {
 #define SUPPORTS_SHADOW_FILTER %d\n\
 #define SRGB_COLOR %d\n\
 #define CAM_NEAR %f\n\
-#define CAM_FAR %f\n\
-#define WIN_X_SIZE %d\n\
-#define WIN_Y_SIZE %d\n",
+#define CAM_FAR %f\n",
         DEPTH2COLOR,
         (_win->get_gsg()->get_supports_shadow_filter() && _has_pcf) ? 1 : 0,
         (_win->get_fb_properties().get_srgb_color() && _has_srgb) ? 1 : 0,
         ((Camera*) _camera.node())->get_lens()->get_near(),
-        ((Camera*) _camera.node())->get_lens()->get_far(),
-        _win->get_x_size(),
-        _win->get_y_size());
+        ((Camera*) _camera.node())->get_lens()->get_far());
 
     VirtualFileSystem* vfs = VirtualFileSystem::get_global_ptr();
-    vfs->write_file(".krender_config.inc.glsl", config, false);
-    // vfs->write_file(".krender/config.inc.glsl", config, false);
-    // printf("%s\n", vfs->read_file(".krender/config.inc.glsl", false).c_str());
+    if (vfs->exists(CONFIG_INC_GLSL))
+        vfs->delete_file(CONFIG_INC_GLSL);
+    vfs->write_file(CONFIG_INC_GLSL, config, false);
 
     free(config);
 }
@@ -351,6 +344,7 @@ void LightingPipeline::remove_lights() {
         _light_manager->remove_light(_lights[i]);
     }
     _lights.clear();
+    _shadowmap_tex->clear_image();
 }
 
 int LightingPipeline::get_num_lights() {
@@ -363,6 +357,12 @@ void LightingPipeline::set_shadow_update_distance(unsigned int x) {
 
 void LightingPipeline::invalidate_shadows() {
     for (int i = 0; i < _lights.size(); i++) {
+        _lights[i]->invalidate_shadows();
+    }
+}
+
+void LightingPipeline::invalidate_shadows(unsigned int i) {
+    if (i >= 0 && i < _lights.size()) {
         _lights[i]->invalidate_shadows();
     }
 }

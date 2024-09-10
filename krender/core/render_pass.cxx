@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "displayRegion.h"
 #include "frameBufferProperties.h"
@@ -7,6 +8,7 @@
 #include "pandaNode.h"
 #include "texture.h"
 #include "transformState.h"
+#include "virtualFileSystem.h"
 #include "windowProperties.h"
 
 #include "krender/core/render_pass.h"
@@ -45,19 +47,25 @@ unsigned int RenderPass::get_num_textures() {
 }
 
 void RenderPass::reload_shader() {
-    if (_source_card.is_empty())
+    if (get_source_card().is_empty())
         return;
 
-    const Shader* shaderc = _source_card.get_shader();
+    const Shader* shaderc = get_source_card().get_shader();
     if (shaderc == nullptr)
         return;
 
-    Filename vert = shaderc->get_filename(Shader::ST_vertex).get_fullpath();
-    Filename frag = shaderc->get_filename(Shader::ST_fragment).get_fullpath();
+    Filename vert_path = shaderc->get_filename(Shader::ST_vertex).get_fullpath();
+    Filename frag_path = shaderc->get_filename(Shader::ST_fragment).get_fullpath();
 
-    Shader* shader = Shader::load(Shader::SL_GLSL, vert, frag);
-    _source_card.clear_shader();
-    _source_card.set_shader(shader, 100);
+    Shader* shader = Shader::load(Shader::SL_GLSL, vert_path, frag_path);
+    if (shader == nullptr)
+        return;
+
+    shader->set_filename(Shader::ST_vertex, vert_path);
+    shader->set_filename(Shader::ST_fragment, frag_path);
+
+    get_source_card().clear_shader();
+    get_source_card().set_shader(shader, 100);
 }
 
 PointerTo<GraphicsOutput> RenderPass::_make_fbo(

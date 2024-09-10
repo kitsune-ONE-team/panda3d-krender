@@ -1,8 +1,6 @@
 #version 140
 // version 140, so we can use sampler2D
 
-#pragma include "krender/shader/blur.inc.frag.glsl"
-
 // custom inputs from the first render pass
 uniform sampler2D base_depth;
 
@@ -10,6 +8,7 @@ uniform sampler2D base_depth;
 uniform sampler2D prev_color;
 
 // custom inputs
+uniform ivec2 win_size;
 uniform float dof_focus_near;
 uniform float dof_focus_far;
 uniform float dof_blur_near;
@@ -20,6 +19,8 @@ in vec2 vert_uv;
 
 // outputs
 out vec4 color;
+
+#pragma include "krender/shader/blur.inc.frag.glsl"
 
 
 float get_z_from_depth(float depth) {

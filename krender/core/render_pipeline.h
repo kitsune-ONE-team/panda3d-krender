@@ -32,8 +32,7 @@ private:
     NodePath _render2d;
     bool _has_alpha;
     unsigned int _index;
-    unsigned int _win_w;
-    unsigned int _win_h;
+    LVecBase2i _win_size;
 
     pvector<RenderPass*> _scene_passes;
     pvector<RenderPass*> _post_passes;

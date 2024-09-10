@@ -5,14 +5,14 @@ import sys
 # PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # sys.path.insert(0, os.path.join(PROJECT_PATH, 'dist'))
 
-from krender.core import RenderPipeline
+from krender.core import RenderPipeline, POST_PASS, SCENE_PASS
 
 from direct.gui.DirectGui import OnscreenImage
 from direct.showbase.ShowBase import ShowBase
 
 from panda3d.core import (
-    get_model_path, load_prc_file_data, ClockObject, LColor,
-    Material, NodePath, PointLight, Shader, Texture)
+    get_model_path, load_prc_file_data, BitMask32, ClockObject, LColor,
+    Material, NodePath, PointLight, Shader, Texture, Vec2)
 
 
 class Sample(ShowBase):
@@ -40,11 +40,15 @@ class Sample(ShowBase):
         self._render_pipeline = RenderPipeline(
             self.win, self.render2d, self.cam, self.cam2d,
             has_srgb=has_srgb, has_alpha=False, has_pcf=True, shadow_size=512)
-        self._render_pipeline.add_render_pass('base', 0)
+        self._render_pipeline.add_render_pass('base', SCENE_PASS, mask=BitMask32(1 << 2))
 
         # add depth of field render pass
-        self._render_pipeline.add_render_pass('dof', 1)
+        self._render_pipeline.add_render_pass('dof', POST_PASS)
         dof_card = self._render_pipeline.get_source_card('dof')
+        win_w = self.win.get_size().get_x()
+        win_h = self.win.get_size().get_y()
+        # dof_card.set_shader_input('win_size', Vec2(win_w, win_h))
+        dof_card.set_shader_input('win_size', self.win.get_size())
         dof_card.set_shader_input('dof_focus_near', 15.0)
         dof_card.set_shader_input('dof_blur_near', 15.0 - 5.0)
         dof_card.set_shader_input('dof_focus_far', 20.0)
@@ -55,13 +59,14 @@ class Sample(ShowBase):
             'krender/shader/dof.frag.glsl'), 100)
 
         # add bloom render pass
-        self._render_pipeline.add_render_pass('bloom', 1, Shader.load(
+        self._render_pipeline.add_render_pass('bloom', POST_PASS, Shader.load(
             Shader.SL_GLSL,
             'krender/shader/bloom.vert.glsl',
             'krender/shader/bloom.frag.glsl'))
 
         # prepare scene with default shaders
         scene = self._render_pipeline.get_scene()
+        # scene.set_shader_input('win_size', self.win.get_size())
         scene.set_shader(Shader.load(
             Shader.SL_GLSL,
             'krender/shader/default.vert.glsl',
