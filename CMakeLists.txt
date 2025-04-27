@@ -4,6 +4,7 @@ project(panda3d-krender)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../../..")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(WIN32)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -23,6 +24,7 @@ include_directories(${PYTHON_INCLUDE_DIR})
 
 include_directories(${PANDA_INCLUDE_DIR}/panda3d)
 link_directories(${PANDA_LIBRARY_DIR})
+link_directories(${INTERROGATE_LIBRARY_DIR})
 
 if(WIN32)
   if(EXISTS "${PANDA_LIBRARY_DIR}/libp3framework.lib")
@@ -45,7 +47,7 @@ set(PANDA_LIBS
   ${PANDA_PREFIX}p3dtoolconfig
   # EXTRA
   ${PANDA_PREFIX}p3direct
-  ${PANDA_PREFIX}p3interrogatedb
+  interrogatedb
 )
 
 if(WIN32)
