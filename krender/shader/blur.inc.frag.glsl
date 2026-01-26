@@ -2,7 +2,6 @@
 #pragma include "krender/shader/defines.inc.glsl"
 
 #define TWO_PI 6.283185307179586
-#define BLUR_SIZE 0.01
 #define BLUR_SAMPLES 4
 
 
@@ -18,13 +17,15 @@ float intersect_circle(vec2 d, float radius) {
     return 0.0;
 }
 
-vec3 process_blur(sampler2D tex, vec2 uv) {
+vec4 process_blur(sampler2D tex, vec2 uv, float blur_size) {
     float aspect = win_size.x / win_size.y;
-    vec2 max_radius = vec2(BLUR_SIZE, BLUR_SIZE * aspect);
+    vec2 max_radius = vec2(blur_size, blur_size * aspect);
     float max_length = length(max_radius);
 
-    vec4 blur = vec4(texture(tex, uv).xyz, 1.0);
+    vec4 blur = texture(tex, uv);
     blur *= 1e-4;
+    float blurw = 1.0;
+    blurw *= 1e-4;
 
     for (int ring = 0; ring <= BLUR_SAMPLES; ++ring) {
         int n_samples = max(1, 8 * ring);
@@ -36,14 +37,15 @@ vec3 process_blur(sampler2D tex, vec2 uv) {
             float y_offs = cos(phi);
 
             vec2 blur_uv = uv + vec2(x_offs, y_offs) * r;
-            vec3 tex_data = texture(tex, blur_uv).xyz;
+            vec4 tex_data = texture(tex, blur_uv);
 
             float coc_weight = intersect_circle(r, max_length);
             coc_weight *= 1.0 / max(1e-9, 1.0);
-            blur += vec4(tex_data, 1.0) * coc_weight;
+            blur += tex_data * coc_weight;
+            blurw += coc_weight;
         }
     }
 
-    blur.rgb /= max(1e-5, blur.w);
-    return blur.rgb;
+    blur /= max(1e-5, blurw);
+    return blur;
 }

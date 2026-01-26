@@ -6,10 +6,10 @@
 
 PostPass::PostPass(
         char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
-        bool has_srgb, bool has_alpha, NodePath card):
-        RenderPass(name, index, win, cam, has_srgb, has_alpha, card) {
-    _fbo = _make_fbo(win, has_srgb, has_alpha, 1, _index);
-    _make_textures();
+        bool has_srgb, bool has_alpha, float sx, float sy, NodePath card):
+        RenderPass(name, index, win, cam, has_srgb, has_alpha, sx, sy, card) {
+    _fbo = _make_fbo(win, has_srgb, has_alpha, true, false, 0, _index);
+    _make_textures(true, false, 0);
     char* cam_name = (char*) malloc((strlen(name) + strlen("_camera") + 1) * sizeof(char));
     sprintf(cam_name, "%s_camera", name);
     _cam = _make_camera(_fbo, cam_name, cam);

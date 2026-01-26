@@ -26,12 +26,13 @@ RenderPipeline::RenderPipeline(
 }
 
 void RenderPipeline::add_render_pass(
-        char* name, unsigned short type, Shader* shader, BitMask32 mask) {
+        char* name, unsigned short type, Shader* shader, BitMask32 mask, float sx, float sy) {
     RenderPass* render_pass;
 
     if (type == SCENE_PASS) {
         ScenePass* scene_pass = new ScenePass(
-            name, _scene_passes.size() + _index, _win, _camera, _has_srgb, _has_alpha);
+            name, _scene_passes.size() + _index, _win, _camera,
+            _has_srgb, _has_alpha, sx, sy);
 
         // setup camera which which captures scene
         // and renders into FBO using default camera lens
@@ -41,11 +42,14 @@ void RenderPipeline::add_render_pass(
 
         _scene_passes.push_back((RenderPass*) scene_pass);
 
+        get_scene().set_shader_input("win_size", _win_size);
+
         // render_pass = (RenderPass*) scene_pass;
 
     } else if (type == DEPTH_PASS) {
         DepthPass* depth_pass = new DepthPass(
-            name, _scene_passes.size() + _index, _win, _camera, _has_srgb, _has_alpha);
+            name, _scene_passes.size() + _index, _win, _camera,
+            _has_srgb, _has_alpha, sx, sy);
 
         // setup camera which which captures scene
         // and renders into FBO using default camera lens
@@ -66,8 +70,8 @@ void RenderPipeline::add_render_pass(
             prev_plane = _scene_passes.back()->get_result_card();
 
         PostPass* post_pass = new PostPass(
-            name, _scene_passes.size() + _post_passes.size() + _index, _win,
-            _camera2d, _has_srgb, _has_alpha, prev_plane);
+            name, _scene_passes.size() + _post_passes.size() + _index, _win, _camera2d,
+            _has_srgb, _has_alpha, sx, sy, prev_plane);
 
         // pass textures from the scene passes to the current render pass
         for (unsigned int i = 0; i < _scene_passes.size(); i++) {
@@ -88,10 +92,19 @@ void RenderPipeline::add_render_pass(
         if (prev_pass != NULL) {
             for (unsigned int j = 0; j < prev_pass->get_num_textures() && j < 1; j++) {
                 PointerTo<Texture> t = prev_pass->get_texture(j);
-                post_pass->get_source_card().set_shader_input(
-                    ShaderInput(std::string("prev_color"), t));
+
+                // substract post pass name from texture name
+                // const char* suffix = t->get_name().substr(
+                //     0, strlen(prev_pass->get_name()) + 1).c_str();
+                // char* name = (char*) malloc((
+                //     strlen("prev_") + strlen(suffix) + 1) * sizeof(char));
+                // sprintf(name, "prev_%s", suffix);
+                // post_pass->get_source_card().set_shader_input(ShaderInput(std::string(name), t));
+                post_pass->get_source_card().set_shader_input(ShaderInput(std::string("prev_color"), t));
             }
         }
+
+        LightingPipeline::update_shader_inputs(post_pass->get_source_card());
 
         _post_passes.push_back((RenderPass*) post_pass);
 
@@ -164,6 +177,20 @@ PointerTo<Texture> RenderPipeline::get_texture(char* name, unsigned int j) {
     return NULL;
 }
 
+unsigned int RenderPipeline::get_num_textures(char* name) {
+    for (unsigned int i = 0; i < _scene_passes.size(); i++) {
+        if (strcmp(_scene_passes[i]->get_name(), name) == 0) {
+            return _scene_passes[i]->get_num_textures();
+        }
+    }
+    for (unsigned int i = 0; i < _post_passes.size(); i++) {
+        if (strcmp(_post_passes[i]->get_name(), name) == 0) {
+            return _post_passes[i]->get_num_textures();
+        }
+    }
+    return 0;
+}
+
 void RenderPipeline::update() {
     if (_win_size.get_x() != _win->get_x_size() || _win_size.get_y() != _win->get_y_size()) {
         _win_size = _win->get_size();
@@ -172,7 +199,13 @@ void RenderPipeline::update() {
             _post_passes[i]->get_source_card().set_shader_input("win_size", _win_size);
             _post_passes[i]->reload_shader();
         }
+        get_scene().set_shader_input("win_size", _win_size);
     }
 
     LightingPipeline::update();
+
+    for (unsigned int i = 0; i < _post_passes.size(); i++) {
+        NodePath card = _post_passes[i]->get_source_card();
+        LightingPipeline::update_shader_inputs(card);
+    }
 }

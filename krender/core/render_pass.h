@@ -21,6 +21,7 @@ public:
     RenderPass(
         char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
         bool has_srgb=false, bool has_alpha=false,
+        float sx=1, float sy=1,
         NodePath card=NodePath::not_found());
     char* get_name();
     NodePath get_camera();
@@ -33,6 +34,8 @@ public:
 protected:
     char* _name;
     unsigned int _index;
+    float _scale_x;
+    float _scale_y;
     PointerTo<GraphicsOutput> _fbo;
     pvector<PointerTo<Texture>> _tex;
     NodePath _cam;
@@ -41,8 +44,11 @@ protected:
 
     PointerTo<GraphicsOutput> _make_fbo(
         PointerTo<GraphicsWindow> win, bool has_srgb=false, bool has_alpha=false,
-        unsigned short num_textures=1, unsigned short sort=0);
-    void _make_textures();
+        bool has_color=true, bool has_depth=true,
+        unsigned short num_aux_textures=1, unsigned short sort=0);
+    void _make_textures(
+        bool has_color=true, bool has_depth=true,
+        unsigned short num_aux_textures=1);
 };
 
 #endif

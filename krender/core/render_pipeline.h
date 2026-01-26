@@ -20,11 +20,13 @@ PUBLISHED:
         bool has_srgb=false, bool has_pcf=false, bool has_alpha=false);
     void add_render_pass(
         char* name, unsigned short type,
-        Shader* shader=nullptr, BitMask32 mask=BitMask32(0));
+        Shader* shader=nullptr, BitMask32 mask=BitMask32(0),
+        float sx=1, float sy=1);
     NodePath get_camera(char* name);
     NodePath get_source_card(char* name);
     NodePath get_result_card(char* name);
     PointerTo<Texture> get_texture(char* name, unsigned int i);
+    unsigned int get_num_textures(char* name);
     void update();
 
 private:

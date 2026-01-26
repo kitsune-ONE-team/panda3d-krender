@@ -3,53 +3,13 @@
 
 ScenePass::ScenePass(
         char* name, unsigned int index, GraphicsWindow* win, NodePath cam,
-        bool has_srgb, bool has_alpha, NodePath card):
-        RenderPass(name, index, win, cam, has_srgb, has_alpha, card) {
-    _fbo = _make_fbo(win, has_srgb, has_alpha, 4, _index);
-    _make_textures();
+        bool has_srgb, bool has_alpha, float sx, float sy, NodePath card):
+        RenderPass(name, index, win, cam, has_srgb, has_alpha, sx, sy, card) {
+    _fbo = _make_fbo(win, has_srgb, has_alpha, true, true, 3, _index);
+    _make_textures(true, true, 3);
     char* cam_name = (char*) malloc((strlen(name) + strlen("_camera") + 1) * sizeof(char));
     sprintf(cam_name, "%s_camera", name);
     _cam = _make_camera(_fbo, cam_name, cam);
-}
-
-void ScenePass::_make_textures() {
-    RenderPass::_make_textures();
-
-    char* tex_name = (char*) malloc((strlen(_name) + strlen("_depth") + 1) * sizeof(char));
-    sprintf(tex_name, "%s_depth", _name);
-
-    PointerTo<Texture> t = new Texture(tex_name);
-    t->set_format(Texture::Format::F_depth_component);
-    t->set_wrap_u(SamplerState::WM_clamp);
-    t->set_wrap_v(SamplerState::WM_clamp);
-    t->set_magfilter(SamplerState::FilterType::FT_linear);
-    t->set_minfilter(SamplerState::FilterType::FT_linear);
-    _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_depth);
-    _tex.push_back(t);
-
-    tex_name = (char*) malloc((strlen(_name) + strlen("_emissive") + 1) * sizeof(char));
-    sprintf(tex_name, "%s_emissive", _name);
-
-    t = new Texture(tex_name);
-    t->set_format(Texture::Format::F_srgb_alpha);
-    t->set_wrap_u(SamplerState::WM_clamp);
-    t->set_wrap_v(SamplerState::WM_clamp);
-    t->set_magfilter(SamplerState::FilterType::FT_linear);
-    t->set_minfilter(SamplerState::FilterType::FT_linear);
-    _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_aux_rgba_0);
-    _tex.push_back(t);
-
-    tex_name = (char*) malloc((strlen(_name) + strlen("_selector") + 1) * sizeof(char));
-    sprintf(tex_name, "%s_selector", _name);
-
-    t = new Texture(tex_name);
-    t->set_format(Texture::Format::F_srgb_alpha);
-    t->set_wrap_u(SamplerState::WM_clamp);
-    t->set_wrap_v(SamplerState::WM_clamp);
-    t->set_magfilter(SamplerState::FilterType::FT_linear);
-    t->set_minfilter(SamplerState::FilterType::FT_linear);
-    _fbo->add_render_texture(t, GraphicsOutput::RTM_bind_or_copy, GraphicsOutput::RTP_aux_rgba_1);
-    _tex.push_back(t);
 }
 
 /*
