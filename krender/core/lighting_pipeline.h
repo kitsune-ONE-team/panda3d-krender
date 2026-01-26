@@ -86,13 +86,14 @@ private:
     void _create_shadow_manager();
     void _create_queue();
     void _create_light_manager();
-    void _update_shader_inputs();
     void _cmd_store_light(unsigned char* gpu_command_data);
     void _cmd_remove_light(unsigned char* gpu_command_data);
     void _cmd_store_source(unsigned char* gpu_command_data);
     void _cmd_remove_sources(unsigned char* gpu_command_data);
 
 public:
+    void update_shader_inputs(NodePath target);
+
     static TypeHandle get_class_type() {
         return _type_handle;
     }

@@ -51,7 +51,7 @@ LightingPipeline::LightingPipeline(
     _create_shadow_manager();
     _create_queue();
     _create_light_manager();
-    _update_shader_inputs();
+    update_shader_inputs(_scene);
 }
 
 void LightingPipeline::_configure() {
@@ -266,10 +266,20 @@ NodePath LightingPipeline::get_scene() {
     return _scene;
 }
 
-void LightingPipeline::_update_shader_inputs() {
-    get_scene().set_shader_input(ShaderInput(_shadowmap_tex->get_name(), _shadowmap_tex));
-    get_scene().set_shader_input(ShaderInput(_light_data_tex->get_name(), _light_data_tex));
-    get_scene().set_shader_input(ShaderInput("camera_pos", _camera.get_pos(_scene)));
+void LightingPipeline::update_shader_inputs(NodePath target) {
+    target.set_shader_input(ShaderInput(_shadowmap_tex->get_name(), _shadowmap_tex));
+    target.set_shader_input(ShaderInput(_light_data_tex->get_name(), _light_data_tex));
+
+    target.set_shader_input(ShaderInput("camera_pos", _camera.get_pos(_scene)));
+
+    Camera* camera_node = (Camera*) _camera.node();
+    Lens* camera_lens = camera_node->get_lens();
+    LMatrix4 proj_mat = camera_lens->get_projection_mat();
+    LMatrix4 inv_proj_mat;
+    inv_proj_mat.invert_from(proj_mat);
+    target.set_shader_input(ShaderInput("RPcam", _camera));
+    target.set_shader_input(ShaderInput("RPcam_proj_mat", proj_mat));
+    target.set_shader_input(ShaderInput("RPcam_inv_proj_mat", inv_proj_mat));
 }
 
 void LightingPipeline::update() {
@@ -313,7 +323,7 @@ void LightingPipeline::update() {
         memcpy(light_data.p(), _light_data->data, sizeof(_light_data->data));
     }
 
-    _update_shader_inputs();
+    // update_shader_inputs(get_scene());
 }
 
 int LightingPipeline::get_num_commands() {
