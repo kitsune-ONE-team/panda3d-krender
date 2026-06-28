@@ -7,7 +7,7 @@ if(${INSTALL_PY} MATCHES "ON")
         OWNER_READ OWNER_WRITE
         GROUP_READ
         WORLD_READ)
-endif()
 
-add_subdirectory(core)
-add_subdirectory(shader)
+    add_subdirectory(core)
+    add_subdirectory(shader)
+endif()
